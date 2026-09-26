@@ -1,0 +1,10 @@
+# तुमचा डेटा 
+raw_data/
+*.csv
+
+# Cache फाईल्स आणि फोल्डर्स (Python आणि General)
+.cache/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
