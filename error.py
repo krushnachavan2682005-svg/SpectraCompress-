@@ -29,4 +29,19 @@ class NotFittedError(SpectraCompressError):
         super().__init__(message, code)
 class NonConvergenceError(InputValidation):
     pass
+
+class MemoryGuardError(SpectraCompressError, ValueError):
+    def __init__(self, message: str = "Memory limit exceeded", code: int = 400):
+        ValueError.__init__(self, message)
+        SpectraCompressError.__init__(self, message=message, code=code)
+
+
+class InvalidFoldConfigError(ValueError, InputValidation):
+    """Raised when cross-validation or fold configuration parameters are invalid."""
+    def __init__(self, message: str = "Invalid fold configuration", code: int = 400):
+        ValueError.__init__(self, message)
+        InputValidation.__init__(self, message=message, code=code)
+
+
+
 
