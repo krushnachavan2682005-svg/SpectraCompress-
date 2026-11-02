@@ -2,7 +2,11 @@
 raw_data/
 *.csv
 
-# Cache फाईल्स आणि फोल्डर्स (Python आणि General)
+# Scratch and raw test outputs
+scratch/
+*.txt
+*.npy
+
 .cache/
 __pycache__/
 *.py[cod]

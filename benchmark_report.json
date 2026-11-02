@@ -1,0 +1,1030 @@
+{
+  "decomposition_benchmarks": [
+    {
+      "benchmark_group": "decomposition_library_comparator",
+      "blas_vendor": "OpenBLAS (scipy-openblas)",
+      "density": 0.1913949298469388,
+      "fit_time_1t_mean_s": 1.4000226199997996,
+      "fit_time_1t_median_s": 1.399180799999158,
+      "fit_time_1t_noisy": false,
+      "fit_time_4t_median_s": 1.180245700001251,
+      "fit_time_4t_noisy": false,
+      "fit_time_8t_median_s": 1.3439658999996027,
+      "fit_time_8t_noisy": false,
+      "flop_c_factor": 6.0,
+      "flop_model": "nominal (formula-based): 6 * min(n,d)^2 * max(n,d)",
+      "gflops_interpretation_note": "nominal (formula-based), not measured hardware throughput",
+      "is_locked_config": true,
+      "is_sparse": false,
+      "k": 90,
+      "method": "sklearn_pca",
+      "nnz": 1200429,
+      "nominal_formula_gflops_1t": 21.086258473542344,
+      "nominal_formula_gflops_4t": 24.99775089201234,
+      "nominal_formula_gflops_8t": 21.952556980804886,
+      "shape": [
+        8000,
+        784
+      ],
+      "sklearn_version": "1.9.0",
+      "svd_solver_used": "full",
+      "theoretical_flops": 29503488000.0,
+      "threadpool_info_1t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 1,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 1,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 1,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threadpool_info_4t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 4,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 4,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 4,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threadpool_info_8t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 8,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 8,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 8,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threads_tested": [
+        1,
+        4,
+        8
+      ],
+      "transform_time_1t_median_s": 0.0755754000019806,
+      "transform_time_8t_median_s": 0.06525350000083563
+    },
+    {
+      "benchmark_group": "from_scratch_covariance_comparator",
+      "blas_vendor": "OpenBLAS (scipy-openblas)",
+      "config_label": "k=10, from_scratch baseline",
+      "covariance_noisy": false,
+      "covariance_time_median_s": 0.12418249999973341,
+      "flop_model": "nominal (formula-based): covariance 2*n*d^2 + power_iteration 2*d^2*iters*k",
+      "gflops_interpretation_note": "nominal (formula-based), not measured hardware throughput",
+      "is_locked_config": false,
+      "k": 10,
+      "measured_iterations_used": 10,
+      "method": "from_scratch_covariance",
+      "nominal_formula_gflops": 18.540889220716693,
+      "power_iteration_noisy": false,
+      "power_iteration_time_median_s": 0.41286979999858886,
+      "shape": [
+        8000,
+        784
+      ],
+      "theoretical_flops": 9957427200.0,
+      "time_per_iteration_s": 0.041286979999858885,
+      "total_scratch_time_s": 0.5370522999983223
+    }
+  ],
+  "dense_vs_sparse_scaling": [
+    {
+      "apparent_speedup": 1.7805260778287433,
+      "benchmark_group": "accuracy_check_locked_k90",
+      "config_label": "k=90, locked config",
+      "dataset": "mnist_train",
+      "dense_reconstruction_mse": 319322.5797877289,
+      "density": 0.1913949298469388,
+      "is_locked_config": true,
+      "k": 90,
+      "max_principal_angle_deg": 2.4148365394514667e-06,
+      "mean_principal_angle_deg": 6.263521745205813e-07,
+      "nnz": 1200429,
+      "note": "different algorithms (scipy svds vs sklearn gesdd), not attributable to sparsity",
+      "scipy_implicit_centered_fit_median_s": 0.7498130000021774,
+      "shape": [
+        8000,
+        784
+      ],
+      "sklearn_pca_fit_median_s": 1.3350615999988804,
+      "sparse_reconstruction_mse": 319322.5797877289
+    },
+    {
+      "backend": "scipy_implicit_centered",
+      "benchmark_group": "same_backend_dense_vs_sparse",
+      "config_label": "k=20, not locked config",
+      "crossover_observed": false,
+      "csr_matvec_count": 153,
+      "csr_mean_s": 0.324276600000303,
+      "csr_median_s": 0.3229988500006584,
+      "csr_std_s": 0.00946357469372759,
+      "csr_time_per_matvec_s": 0.0015171986927395896,
+      "dataset": "mnist_train",
+      "dense_matvec_count": 153,
+      "dense_mean_s": 0.41099813000000723,
+      "dense_median_s": 0.4088744000000588,
+      "dense_std_s": 0.0070758506523852,
+      "dense_time_per_matvec_s": 0.0036424647059070565,
+      "density": 0.1913949298469388,
+      "is_locked_config": false,
+      "k": 20,
+      "n_trials": 10,
+      "nnz": 1200429,
+      "shape": [
+        8000,
+        784
+      ],
+      "speedup_ratio_95_ci": [
+        1.2412532510444492,
+        1.2961009779707784
+      ],
+      "speedup_ratio_mean": 1.2674307365983952
+    },
+    {
+      "backend": "scipy_implicit_centered",
+      "benchmark_group": "same_backend_dense_vs_sparse",
+      "config_label": "k=20, not locked config",
+      "crossover_observed": false,
+      "csr_matvec_count": 495,
+      "csr_mean_s": 0.11452940000017406,
+      "csr_median_s": 0.10534734999964712,
+      "csr_std_s": 0.027437596128669486,
+      "csr_time_per_matvec_s": 0.00015053414147155538,
+      "dataset": "synthetic_8000x784_1pct",
+      "dense_matvec_count": 495,
+      "dense_mean_s": 0.24859295000023848,
+      "dense_median_s": 0.2505156999995961,
+      "dense_std_s": 0.007465481035635998,
+      "dense_time_per_matvec_s": 0.003966288080846425,
+      "density": 0.01,
+      "is_locked_config": false,
+      "k": 20,
+      "n_trials": 10,
+      "nnz": 62720,
+      "shape": [
+        8000,
+        784
+      ],
+      "speedup_ratio_95_ci": [
+        1.8479615390485828,
+        2.438105593198277
+      ],
+      "speedup_ratio_mean": 2.1705601356495423
+    },
+    {
+      "backend": "scipy_implicit_centered",
+      "benchmark_group": "same_backend_dense_vs_sparse",
+      "config_label": "k=20, not locked config",
+      "crossover_observed": false,
+      "csr_matvec_count": 559,
+      "csr_mean_s": 0.5158202399998117,
+      "csr_median_s": 0.4991407999987132,
+      "csr_std_s": 0.03744469547981537,
+      "csr_time_per_matvec_s": 0.0012943502683200822,
+      "dataset": "synthetic_8000x784_10pct",
+      "dense_matvec_count": 559,
+      "dense_mean_s": 0.6098331500001223,
+      "dense_median_s": 0.6016611999984889,
+      "dense_std_s": 0.0215030054495607,
+      "dense_time_per_matvec_s": 0.004056088908695795,
+      "density": 0.1,
+      "is_locked_config": false,
+      "k": 20,
+      "n_trials": 10,
+      "nnz": 627200,
+      "shape": [
+        8000,
+        784
+      ],
+      "speedup_ratio_95_ci": [
+        1.1206988419227668,
+        1.2371245945865053
+      ],
+      "speedup_ratio_mean": 1.1822590559849782
+    },
+    {
+      "backend": "scipy_implicit_centered",
+      "benchmark_group": "same_backend_dense_vs_sparse",
+      "config_label": "k=20, not locked config",
+      "crossover_observed": false,
+      "csr_matvec_count": 541,
+      "csr_mean_s": 1.9285638500008644,
+      "csr_median_s": 1.9251078500019503,
+      "csr_std_s": 0.052218141853390035,
+      "csr_time_per_matvec_s": 0.00318017060996047,
+      "dataset": "synthetic_8000x784_40pct",
+      "dense_matvec_count": 541,
+      "dense_mean_s": 2.036088799999925,
+      "dense_median_s": 2.039439649999622,
+      "dense_std_s": 0.03230477223211531,
+      "dense_time_per_matvec_s": 0.003630261922384485,
+      "density": 0.4,
+      "is_locked_config": false,
+      "k": 20,
+      "n_trials": 10,
+      "nnz": 2508800,
+      "shape": [
+        8000,
+        784
+      ],
+      "speedup_ratio_95_ci": [
+        1.0333780072780616,
+        1.075291058602751
+      ],
+      "speedup_ratio_mean": 1.0557538968694307
+    }
+  ],
+  "environment": {
+    "blas_vendor": "OpenBLAS (scipy-openblas)",
+    "cpu_logical_cores": 8,
+    "cpu_physical_cores": 4,
+    "numpy_version": "2.4.6",
+    "python_version": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+    "ram_available_bytes": 788951040,
+    "ram_total_bytes": 8324866048,
+    "scipy_version": "1.17.1",
+    "sklearn_version": "1.9.0"
+  },
+  "experiment_id": "day6_hardware_and_blas_benchmarking",
+  "linear_solver_scaling": [
+    {
+      "benchmark_group": "gaussian_elimination_scaling",
+      "flop_formula": "(2/3)*n^3",
+      "gflops_interpretation_note": "nominal (formula-based), not measured hardware throughput",
+      "n": 100,
+      "numpy_1t_doubling_ratio_200_100": 3.538461547820887,
+      "numpy_1t_doubling_ratio_400_200": 5.441713968510301,
+      "numpy_1t_empirical_local_exponent_100_400": 2.1335916841416704,
+      "numpy_1t_median_s": 8.969999908003956e-05,
+      "numpy_1t_noisy": true,
+      "numpy_1t_nominal_formula_gflops": 7.432181421449047,
+      "numpy_4t_median_s": 0.0008104000007733703,
+      "numpy_4t_noisy": false,
+      "numpy_4t_nominal_formula_gflops": 0.8226390252103432,
+      "numpy_8t_median_s": 0.003706300001795171,
+      "numpy_8t_noisy": false,
+      "numpy_8t_nominal_formula_gflops": 0.17987390830309533,
+      "pure_python_doubling_ratio_200_100": 7.465965555210729,
+      "pure_python_doubling_ratio_400_200": 8.668916644678864,
+      "pure_python_empirical_local_exponent_100_400": 3.0080902818266013,
+      "pure_python_mean_s": 0.03088616000022739,
+      "pure_python_median_s": 0.03143579999959911,
+      "pure_python_noisy": false,
+      "pure_python_nominal_formula_gflops": 0.021207243546376053,
+      "speedup_numpy_1t_over_python": 350.4548530881127,
+      "theoretical_flops": 666666.6666666666,
+      "thread_ratio_1t_over_4t": 0.11068607970685863,
+      "thread_ratio_1t_over_8t": 0.02420203411396616,
+      "thread_scaling_hypothesis_note": "For n <= 400, thread synchronization overhead causes 1T to beat 4T/8T; crossover observed at n >= 1000.",
+      "threadpool_info_1t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 1,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 1,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 1,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threadpool_info_4t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 4,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 4,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 4,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threadpool_info_8t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 8,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 8,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 8,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threads_tested": [
+        1,
+        4,
+        8
+      ]
+    },
+    {
+      "benchmark_group": "gaussian_elimination_scaling",
+      "flop_formula": "(2/3)*n^3",
+      "gflops_interpretation_note": "nominal (formula-based), not measured hardware throughput",
+      "n": 200,
+      "numpy_1t_doubling_ratio_200_100": 3.538461547820887,
+      "numpy_1t_doubling_ratio_400_200": 5.441713968510301,
+      "numpy_1t_empirical_local_exponent_100_400": 2.1335916841416704,
+      "numpy_1t_median_s": 0.00031739999758428894,
+      "numpy_1t_noisy": false,
+      "numpy_1t_nominal_formula_gflops": 16.803192734483275,
+      "numpy_4t_median_s": 0.0011606000007304829,
+      "numpy_4t_noisy": false,
+      "numpy_4t_nominal_formula_gflops": 4.5953242546756226,
+      "numpy_8t_median_s": 0.0038514000007126015,
+      "numpy_8t_noisy": false,
+      "numpy_8t_nominal_formula_gflops": 1.3847778294507291,
+      "pure_python_doubling_ratio_200_100": 7.465965555210729,
+      "pure_python_doubling_ratio_400_200": 8.668916644678864,
+      "pure_python_empirical_local_exponent_100_400": 3.0080902818266013,
+      "pure_python_mean_s": 0.23520089999801713,
+      "pure_python_median_s": 0.23469859999750042,
+      "pure_python_noisy": false,
+      "pure_python_nominal_formula_gflops": 0.02272418043137085,
+      "speedup_numpy_1t_over_python": 739.4410894258867,
+      "theoretical_flops": 5333333.333333333,
+      "thread_ratio_1t_over_4t": 0.27347923262495005,
+      "thread_ratio_1t_over_8t": 0.08241158994795719,
+      "thread_scaling_hypothesis_note": "For n <= 400, thread synchronization overhead causes 1T to beat 4T/8T; crossover observed at n >= 1000.",
+      "threadpool_info_1t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 1,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 1,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 1,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threadpool_info_4t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 4,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 4,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 4,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threadpool_info_8t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 8,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 8,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 8,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threads_tested": [
+        1,
+        4,
+        8
+      ]
+    },
+    {
+      "benchmark_group": "gaussian_elimination_scaling",
+      "flop_formula": "(2/3)*n^3",
+      "gflops_interpretation_note": "nominal (formula-based), not measured hardware throughput",
+      "n": 400,
+      "numpy_1t_doubling_ratio_200_100": 3.538461547820887,
+      "numpy_1t_doubling_ratio_400_200": 5.441713968510301,
+      "numpy_1t_empirical_local_exponent_100_400": 2.1335916841416704,
+      "numpy_1t_median_s": 0.0017272000004595611,
+      "numpy_1t_noisy": false,
+      "numpy_1t_nominal_formula_gflops": 24.70279449705548,
+      "numpy_4t_median_s": 0.0036202999981469475,
+      "numpy_4t_noisy": false,
+      "numpy_4t_nominal_formula_gflops": 11.78539532317919,
+      "numpy_8t_median_s": 0.023605300000781426,
+      "numpy_8t_noisy": false,
+      "numpy_8t_nominal_formula_gflops": 1.807503682022861,
+      "pure_python_doubling_ratio_200_100": 7.465965555210729,
+      "pure_python_doubling_ratio_400_200": 8.668916644678864,
+      "pure_python_empirical_local_exponent_100_400": 3.0080902818266013,
+      "pure_python_mean_s": 2.0598528200003785,
+      "pure_python_median_s": 2.0345826000011584,
+      "pure_python_noisy": false,
+      "pure_python_nominal_formula_gflops": 0.020970722283107292,
+      "speedup_numpy_1t_over_python": 1177.9658403542214,
+      "theoretical_flops": 42666666.666666664,
+      "thread_ratio_1t_over_4t": 0.47708753455338765,
+      "thread_ratio_1t_over_8t": 0.0731700084473565,
+      "thread_scaling_hypothesis_note": "For n <= 400, thread synchronization overhead causes 1T to beat 4T/8T; crossover observed at n >= 1000.",
+      "threadpool_info_1t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 1,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 1,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 1,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threadpool_info_4t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 4,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 4,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 4,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threadpool_info_8t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 8,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 8,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 8,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threads_tested": [
+        1,
+        4,
+        8
+      ]
+    },
+    {
+      "benchmark_group": "gaussian_elimination_scaling",
+      "flop_formula": "(2/3)*n^3",
+      "gflops_interpretation_note": "nominal (formula-based), not measured hardware throughput",
+      "n": 1000,
+      "numpy_1t_doubling_ratio_200_100": null,
+      "numpy_1t_doubling_ratio_400_200": null,
+      "numpy_1t_empirical_local_exponent_100_400": null,
+      "numpy_1t_median_s": 0.02161290000003646,
+      "numpy_1t_noisy": false,
+      "numpy_1t_nominal_formula_gflops": 30.84577574807369,
+      "numpy_4t_median_s": 0.015137299997149967,
+      "numpy_4t_noisy": false,
+      "numpy_4t_nominal_formula_gflops": 44.041319574308886,
+      "numpy_8t_median_s": 0.024326899998413865,
+      "numpy_8t_noisy": false,
+      "numpy_8t_nominal_formula_gflops": 27.404505576548342,
+      "pure_python_doubling_ratio_200_100": null,
+      "pure_python_doubling_ratio_400_200": null,
+      "pure_python_empirical_local_exponent_100_400": null,
+      "pure_python_mean_s": null,
+      "pure_python_median_s": null,
+      "pure_python_noisy": false,
+      "pure_python_nominal_formula_gflops": null,
+      "speedup_numpy_1t_over_python": null,
+      "theoretical_flops": 666666666.6666666,
+      "thread_ratio_1t_over_4t": 1.4277909537437794,
+      "thread_ratio_1t_over_8t": 0.8884362578645714,
+      "thread_scaling_hypothesis_note": "For n <= 400, thread synchronization overhead causes 1T to beat 4T/8T; crossover observed at n >= 1000.",
+      "threadpool_info_1t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 1,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 1,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 1,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threadpool_info_4t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 4,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 4,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 4,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threadpool_info_8t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 8,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 8,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 8,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threads_tested": [
+        1,
+        4,
+        8
+      ]
+    },
+    {
+      "benchmark_group": "gaussian_elimination_scaling",
+      "flop_formula": "(2/3)*n^3",
+      "gflops_interpretation_note": "nominal (formula-based), not measured hardware throughput",
+      "n": 2000,
+      "numpy_1t_doubling_ratio_200_100": null,
+      "numpy_1t_doubling_ratio_400_200": null,
+      "numpy_1t_empirical_local_exponent_100_400": null,
+      "numpy_1t_median_s": 0.16702499999883003,
+      "numpy_1t_noisy": false,
+      "numpy_1t_nominal_formula_gflops": 31.931347602877963,
+      "numpy_4t_median_s": 0.09769679999953951,
+      "numpy_4t_noisy": false,
+      "numpy_4t_nominal_formula_gflops": 54.59066554235626,
+      "numpy_8t_median_s": 0.10554059999776655,
+      "numpy_8t_noisy": false,
+      "numpy_8t_nominal_formula_gflops": 50.53347558613649,
+      "pure_python_doubling_ratio_200_100": null,
+      "pure_python_doubling_ratio_400_200": null,
+      "pure_python_empirical_local_exponent_100_400": null,
+      "pure_python_mean_s": null,
+      "pure_python_median_s": null,
+      "pure_python_noisy": false,
+      "pure_python_nominal_formula_gflops": null,
+      "speedup_numpy_1t_over_python": null,
+      "theoretical_flops": 5333333333.333333,
+      "thread_ratio_1t_over_4t": 1.7096261085277848,
+      "thread_ratio_1t_over_8t": 1.5825663299466235,
+      "thread_scaling_hypothesis_note": "For n <= 400, thread synchronization overhead causes 1T to beat 4T/8T; crossover observed at n >= 1000.",
+      "threadpool_info_1t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 1,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 1,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 1,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threadpool_info_4t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 4,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 4,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 4,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threadpool_info_8t": [
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\numpy.libs\\libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+          "internal_api": "openblas",
+          "num_threads": 8,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.31.188.0"
+        },
+        {
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\sklearn\\.libs\\vcomp140.dll",
+          "internal_api": "openmp",
+          "num_threads": 8,
+          "prefix": "vcomp",
+          "user_api": "openmp",
+          "version": null
+        },
+        {
+          "architecture": "Haswell",
+          "filepath": "C:\\Users\\KRUSHNA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\scipy.libs\\libscipy_openblas-64eda39e79589aedb16f58e5547eb599.dll",
+          "internal_api": "openblas",
+          "num_threads": 8,
+          "prefix": "libscipy_openblas",
+          "threading_layer": "pthreads",
+          "user_api": "blas",
+          "version": "0.3.30"
+        }
+      ],
+      "threads_tested": [
+        1,
+        4,
+        8
+      ]
+    }
+  ],
+  "locked_configuration": {
+    "k": 90,
+    "method": "sklearn_pca",
+    "source_report_hash": "11b882546939181721f87cc4eabda960bb9bfe894842de0001d3bd6c4f189b95"
+  },
+  "memory_benchmarks_subprocess": [
+    {
+      "analytic_dense_bytes": null,
+      "analytic_dense_mb": null,
+      "config_note": "locked k=90",
+      "is_large_synthetic": false,
+      "k": 90,
+      "limitations": "tracemalloc misses BLAS/LAPACK/C-level workspace; peak_wset includes shared library mappings.",
+      "max_sample_bytes": 385343488,
+      "net_working_set_bytes": 169148416,
+      "net_working_set_mb": 161.3125,
+      "peak_wset_bytes": 169148416,
+      "pre_fit_sample_bytes": 216195072,
+      "target": "sklearn_pca_dense",
+      "tracemalloc_peak_bytes": 225419965,
+      "tracemalloc_peak_mb": 214.9772310256958
+    },
+    {
+      "analytic_dense_bytes": null,
+      "analytic_dense_mb": null,
+      "config_note": "k=20, not locked config",
+      "is_large_synthetic": false,
+      "k": 20,
+      "limitations": "tracemalloc misses BLAS/LAPACK/C-level workspace; peak_wset includes shared library mappings.",
+      "max_sample_bytes": 271044608,
+      "net_working_set_bytes": 30273536,
+      "net_working_set_mb": 28.87109375,
+      "peak_wset_bytes": 30273536,
+      "pre_fit_sample_bytes": 240771072,
+      "target": "scipy_implicit_centered_csr",
+      "tracemalloc_peak_bytes": 28871681,
+      "tracemalloc_peak_mb": 27.534180641174316
+    },
+    {
+      "analytic_dense_bytes": null,
+      "analytic_dense_mb": null,
+      "config_note": "k=20, not locked config (control)",
+      "is_large_synthetic": false,
+      "k": 20,
+      "limitations": "tracemalloc misses BLAS/LAPACK/C-level workspace; peak_wset includes shared library mappings.",
+      "max_sample_bytes": 347561984,
+      "net_working_set_bytes": 56569856,
+      "net_working_set_mb": 53.94921875,
+      "peak_wset_bytes": 56569856,
+      "pre_fit_sample_bytes": 290992128,
+      "target": "scipy_implicit_centered_control_dense",
+      "tracemalloc_peak_bytes": 50256500,
+      "tracemalloc_peak_mb": 47.9283332824707
+    },
+    {
+      "analytic_dense_bytes": 9600000000,
+      "analytic_dense_mb": 9155.2734375,
+      "config_note": "k=5, synthetic out-of-core",
+      "is_large_synthetic": true,
+      "k": 5,
+      "limitations": "tracemalloc misses BLAS/LAPACK/C-level workspace; peak_wset includes shared library mappings.",
+      "max_sample_bytes": 219750400,
+      "net_working_set_bytes": 21905408,
+      "net_working_set_mb": 20.890625,
+      "peak_wset_bytes": 21905408,
+      "pre_fit_sample_bytes": 197844992,
+      "target": "large_synthetic_csr",
+      "tracemalloc_peak_bytes": 15373888,
+      "tracemalloc_peak_mb": 14.66168212890625
+    }
+  ],
+  "memory_limitations": "tracemalloc misses BLAS/LAPACK/C-level workspace; peak_wset includes shared library mappings.",
+  "online_serving_latency": {
+    "large_d_csr_row_p50_ms": 0.07969999933266081,
+    "large_d_csr_row_p95_ms": 0.08959999831859022,
+    "large_d_csr_row_p99_ms": 0.15780599740537582,
+    "large_d_dense_row_p50_ms": 0.04320000152802095,
+    "large_d_dense_row_p95_ms": 0.04909999934170628,
+    "large_d_dense_row_p99_ms": 0.07361200016021029,
+    "mnist_csr_row_p50_ms": 0.03849999848171137,
+    "mnist_csr_row_p95_ms": 0.04450000051292591,
+    "mnist_csr_row_p99_ms": 0.053736001427751,
+    "mnist_dense_row_p50_ms": 0.02840000161086209,
+    "mnist_dense_row_p95_ms": 0.032500000088475645,
+    "mnist_dense_row_p99_ms": 0.03580099972168682,
+    "n_repeats": 2000
+  },
+  "schema_version": 1,
+  "timestamp_utc": "2026-11-02T05:35:43.189319+00:00",
+  "total_benchmark_runtime_s": 159.0672259999992
+}

@@ -3,6 +3,7 @@ import logging
 import warnings
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from typing import Optional, Any, Union
 import joblib
 import numpy as np
@@ -17,6 +18,7 @@ from error import (
     NotFittedError,
     NonConvergenceError,
     MemoryGuardError,
+    SpectraCompressError,
 )
 from feature_pipeline import Centerer, sparse_center, sparse_column_mean_var
 from stability_diagnostics import (
@@ -84,9 +86,12 @@ class DecompositionConfig:
     tsvd_n_iter: int = 5               # TruncatedSVD randomized method sathi iteration setting.
     output_dtype: str = "float64"      # Output arrays cha expected numeric data type.
     max_dense_cov_dim: int = 5000      # Feature limit for dense covariance matrix formation.
+    ortho_tol: float = 1e-4            # Orthonormality tolerance for V @ V.T verification.
 
     # Config values valid aahet ka te check karto.
     def __post_init__(self):
+        if self.ortho_tol <= 0:
+            raise InputValidation(message="ortho_tol must be > 0")
         # Method string madhye dili asel tar Enum madhye convert karto.
         if isinstance(self.method, str):
             try:
@@ -232,6 +237,11 @@ class DecompositionTransformer:
 
     # Training data var decomposition shikto.
     def fit(self, X_train: Union[np.ndarray, sp.spmatrix]) -> "DecompositionTransformer":
+        if getattr(self, "_is_loaded_artifact", False):
+            raise SpectraCompressError(
+                message="Cannot fit an already loaded transformer artifact. "
+                        "Loaded artifacts are immutable; instantiate a new DecompositionTransformer instead."
+            )
         start_time = time.perf_counter()
         self.fit_warnings_ = []
         self.requested_rank_ = self.config_.k
@@ -652,63 +662,12 @@ class DecompositionTransformer:
         return self.inverse_transform(self.transform(X))
 
     # Fitted transformer chi state disk var save karto.
-    def save(self, path: str):
-        state = {
-            "mean_": self.mean_,
-            "components_": self.components_,
-            "explained_variance_": self.explained_variance_,
-            "singular_values_": self.singular_values_,
-            "total_variance_": self.total_variance_,
-            "n_features_in_": self.n_features_in_,
-            "effective_rank_": self.effective_rank_,
-            "requested_rank_": self.requested_rank_,
-            "centered_": self.centered_,
-            "config": {
-                "method": self.config_.method.value,
-                "k": self.config_.k,
-                "seed": self.config_.seed,
-                "eig_tol": self.config_.eig_tol,
-                "eig_max_iter": self.config_.eig_max_iter,
-                "psd_clip_rtol": self.config_.psd_clip_rtol,
-                "pca_svd_solver": self.config_.pca_svd_solver,
-                "tsvd_algorithm": self.config_.tsvd_algorithm,
-                "tsvd_n_iter": self.config_.tsvd_n_iter,
-                "output_dtype": self.config_.output_dtype,
-                "max_dense_cov_dim": getattr(self.config_, "max_dense_cov_dim", 5000),
-            },
-            "versions": {
-                "numpy": np.__version__,
-                "sklearn": sklearn.__version__,
-            },
-            "schema_version": 1
-        }
-        joblib.dump(state, path)
+    def save(self, path: Union[str, Path], **kwargs):
+        from serialization import save_transformer
+        return save_transformer(self, path, **kwargs)
 
     # Previously saved transformer state load karun transformer object rebuild karto.
     @classmethod
-    def load(cls, path: str) -> "DecompositionTransformer":
-        state = joblib.load(path)
-        if state["versions"]["numpy"] != np.__version__:
-            logger.warning("Numpy version mismatch")
-        if state["versions"]["sklearn"] != sklearn.__version__:
-            logger.warning("Sklearn version mismatch")
-
-        config = DecompositionConfig(**state["config"])
-        transformer = cls(config)
-        transformer.components_ = state["components_"]
-        transformer.explained_variance_ = state["explained_variance_"]
-        transformer.singular_values_ = state["singular_values_"]
-        transformer.total_variance_ = state["total_variance_"]
-        transformer.n_features_in_ = state["n_features_in_"]
-        transformer.effective_rank_ = state.get("effective_rank_", transformer.components_.shape[0])
-        transformer.requested_rank_ = state.get("requested_rank_", config.k)
-        transformer.centered_ = state.get("centered_", True)
-
-        if state["mean_"] is not None:
-            transformer.centerer = Centerer()
-            transformer.centerer.mean_ = state["mean_"]
-            transformer.centerer.n_features_in_ = state["n_features_in_"]
-        else:
-            transformer.centerer = None
-
-        return transformer
+    def load(cls, path: Union[str, Path], **kwargs) -> "DecompositionTransformer":
+        from serialization import load_transformer
+        return load_transformer(path, **kwargs)
