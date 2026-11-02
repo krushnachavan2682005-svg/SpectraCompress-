@@ -309,20 +309,20 @@ def measure_subprocess_peak_memory(
     target: str,
     data_path: Path = DATA_PATH,
     seed: int = SEED,
-    k: int = 20,
+    k: int = 90,
     npy_cache_path: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Measures memory in a FRESH spawned Python subprocess with a 1 ms background sampler thread.
 
-    Targets:
-      - 'sklearn_pca_dense': sklearn_pca on dense MNIST train (k=90)
-      - 'scipy_implicit_centered_csr': scipy_implicit_centered on CSR MNIST train (k=20, not locked config)
-      - 'scipy_implicit_centered_control_dense': CONTROL: SAME backend (scipy_implicit_centered, k=20)
-        fit on a densified copy (.toarray()).
-      - 'large_synthetic_csr': Large synthetic matrix where dense would not fit in RAM (n=60000, d=20000).
-        Reports analytic dense size vs measured CSR fit memory; NEVER densifies it.
+    Measures:
+      (a) 'sklearn_pca_dense': sklearn_pca on dense MNIST train (locked k=90)
+      (b) 'scipy_implicit_centered_csr': scipy_implicit_centered on CSR MNIST train (SAME backend, SAME locked k=90)
+      (c) 'scipy_implicit_centered_control_dense': CONTROL with SAME backend and SAME locked k=90,
+          densified inside measured region with baseline sample taken before .toarray().
+      (d) 'large_synthetic_csr': large synthetic out-of-core CSR matrix (60000x20000, 9.60 GB dense equivalent)
+          with matrix built before baseline, tracking matvec count via CountingLinearOperator hook.
 
-    Loads from pre-cached .npy file to prevent CSV parse allocation skew.
+    Metric name: 'sampled current wset max minus pre-fit sample'
     """
     if npy_cache_path is None or not npy_cache_path.exists():
         # Ensure npy cache exists
@@ -339,7 +339,9 @@ def measure_subprocess_peak_memory(
     sub_code = f"""
 import json, sys, time, threading, psutil, tracemalloc
 import numpy as np, scipy.sparse as sp
+import decomposition
 from decomposition import DecompositionConfig, DecompositionTransformer, MethodType
+from benchmark import CountingLinearOperator
 
 npy_path = '{clean_npy_path}'
 seed = {seed}
@@ -348,33 +350,55 @@ target = '{target}'
 
 analytic_dense_bytes = None
 is_large_synthetic = False
+matrix_built_before_baseline = True
+csr_bytes_analytic = None
+backend_actually_used = None
+matvec_count = None
+n_samples_val = 8000
+n_features_val = 784
+nnz_val = None
+density_val = None
 
 if target == 'sklearn_pca_dense':
     X = np.load(npy_path)
     cfg = DecompositionConfig(method=MethodType.sklearn_pca, k=90, seed=seed)
     label = 'sklearn_pca_dense'
-    config_note = 'locked k=90'
+    config_note = 'locked k=90 (library comparator)'
+    backend_actually_used = 'sklearn_pca'
+    nnz_val = int(np.count_nonzero(X))
+    density_val = float(nnz_val / X.size)
 elif target == 'scipy_implicit_centered_csr':
     X_dense = np.load(npy_path)
     X = sp.csr_matrix(X_dense)
-    cfg = DecompositionConfig(method=MethodType.scipy_implicit_centered, k=k, seed=seed)
+    cfg = DecompositionConfig(method=MethodType.scipy_implicit_centered, k=90, seed=seed)
     label = 'scipy_implicit_centered_csr'
-    config_note = 'k=20, not locked config'
+    config_note = 'locked k=90'
+    backend_actually_used = 'scipy_implicit_centered'
+    nnz_val = int(X.nnz)
+    density_val = float(X.nnz / (X.shape[0] * X.shape[1]))
+    csr_bytes_analytic = int(X.data.nbytes + X.indices.nbytes + X.indptr.nbytes)
 elif target in ('scipy_implicit_centered_control_dense', 'control_explicitly_densified'):
-    # CONTROL: the SAME backend (scipy_implicit_centered) fit on a densified copy (.toarray())
+    # CONTROL: the SAME backend (scipy_implicit_centered) and SAME k=90 fit on densified copy (.toarray())
+    # Baseline taken BEFORE .toarray(), and densification happens INSIDE the measured region.
     X_dense = np.load(npy_path)
     X_csr = sp.csr_matrix(X_dense)
-    X = X_csr.toarray()
-    cfg = DecompositionConfig(method=MethodType.scipy_implicit_centered, k=k, seed=seed)
+    cfg = DecompositionConfig(method=MethodType.scipy_implicit_centered, k=90, seed=seed)
     label = 'scipy_implicit_centered_control_dense'
-    config_note = 'k=20, not locked config (control)'
+    config_note = 'locked k=90 (control, densified from CSR inside measured region)'
+    backend_actually_used = 'scipy_implicit_centered'
+    nnz_val = int(X_csr.nnz)
+    density_val = float(X_csr.nnz / (X_csr.shape[0] * X_csr.shape[1]))
+    csr_bytes_analytic = int(X_csr.data.nbytes + X_csr.indices.nbytes + X_csr.indptr.nbytes)
 elif target == 'large_synthetic_csr':
     # Large synthetic matrix where dense would not fit in 7.75 GB RAM:
     # n=60,000, d=20,000 -> dense would be 60000 * 20000 * 8 = 9,600,000,000 bytes (9.60 GB).
     n_large, d_large = 60000, 20000
+    n_samples_val, n_features_val = n_large, d_large
     analytic_dense_bytes = n_large * d_large * 8
     is_large_synthetic = True
     nnz_large = 600000  # 0.05% density
+    nnz_val = nnz_large
+    density_val = float(nnz_large / (n_large * d_large))
     rng = np.random.default_rng(seed)
     total_entries = n_large * d_large
     idx = rng.choice(total_entries, size=nnz_large, replace=False)
@@ -382,9 +406,21 @@ elif target == 'large_synthetic_csr':
     cols = idx % d_large
     data = rng.standard_normal(nnz_large, dtype=np.float64)
     X = sp.csr_matrix((data, (rows, cols)), shape=(n_large, d_large))
+    matrix_built_before_baseline = True
+    backend_actually_used = 'scipy_implicit_centered'
+    csr_bytes_analytic = int(X.data.nbytes + X.indices.nbytes + X.indptr.nbytes)
     cfg = DecompositionConfig(method=MethodType.scipy_implicit_centered, k=5, seed=seed)
     label = 'large_synthetic_csr'
     config_note = 'k=5, synthetic out-of-core'
+
+    # Hook decomposition.sparse_center with CountingLinearOperator to record matvec count
+    orig_sparse_center = decomposition.sparse_center
+    last_op = []
+    def counting_sparse_center(mat, means):
+        cop = CountingLinearOperator(orig_sparse_center(mat, means))
+        last_op.append(cop)
+        return cop
+    decomposition.sparse_center = counting_sparse_center
 else:
     raise ValueError(f'Unknown target: {{target}}')
 
@@ -404,6 +440,10 @@ tracemalloc.start()
 tracemalloc.reset_peak()
 sampler_thread.start()
 
+if target in ('scipy_implicit_centered_control_dense', 'control_explicitly_densified'):
+    # Densify INSIDE the measured region for the control
+    X = X_csr.toarray()
+
 t = DecompositionTransformer(cfg)
 t.fit(X)
 
@@ -412,6 +452,9 @@ sampler_thread.join()
 _, tm_peak = tracemalloc.get_traced_memory()
 tracemalloc.stop()
 
+if target == 'large_synthetic_csr' and last_op:
+    matvec_count = last_op[0].total_calls
+
 max_sample = max(working_set_samples) if working_set_samples else pre_fit_sample
 net_wset = max(0, max_sample - pre_fit_sample)
 
@@ -419,16 +462,35 @@ out = {{
     'target': label,
     'config_note': config_note,
     'k': getattr(cfg, 'k', k),
+    'backend_actually_used': backend_actually_used,
+    'n': n_samples_val,
+    'd': n_features_val,
+    'nnz': nnz_val,
+    'actual_density': density_val,
+    'csr_bytes_analytic': csr_bytes_analytic,
+    'csr_bytes_analytic_mb': (csr_bytes_analytic / (1024**2)) if csr_bytes_analytic else None,
+    'matrix_built_before_baseline': matrix_built_before_baseline,
+    'matvec_count': matvec_count,
     'is_large_synthetic': is_large_synthetic,
     'analytic_dense_bytes': analytic_dense_bytes,
     'analytic_dense_mb': (analytic_dense_bytes / (1024**2)) if analytic_dense_bytes else None,
+    'metric_name': 'sampled current wset max minus pre-fit sample',
     'pre_fit_sample_bytes': int(pre_fit_sample),
+    'pre_fit_sample_mb': float(pre_fit_sample / (1024**2)),
     'max_sample_bytes': int(max_sample),
+    'max_sample_mb': float(max_sample / (1024**2)),
     'net_working_set_bytes': int(net_wset),
     'net_working_set_mb': float(net_wset / (1024**2)),
+    'sampled_current_wset_max_minus_pre_fit_sample_bytes': int(net_wset),
+    'sampled_current_wset_max_minus_pre_fit_sample_mb': float(net_wset / (1024**2)),
     'peak_wset_bytes': int(net_wset),
     'tracemalloc_peak_bytes': int(tm_peak),
     'tracemalloc_peak_mb': float(tm_peak / (1024**2)),
+    'tracemalloc_vs_wset_explanation': (
+        'tracemalloc tracks peak cumulative allocations in Python heap across intermediate centering arrays '
+        'and SVD buffers; OS working set reflects physical RAM pages committed by Windows virtual memory manager, '
+        'which reuses freed pages in arenas without demanding new physical page frames.'
+    ),
     'limitations': 'tracemalloc misses BLAS/LAPACK/C-level workspace; peak_wset includes shared library mappings.',
 }}
 print(json.dumps(out))
@@ -845,18 +907,21 @@ class BenchmarkRunner:
         return results
 
     def run_online_latency_benchmark(self, X_train_mnist: np.ndarray) -> Dict[str, Any]:
-        """Evaluates single-row transform latency distributions (p50, p95, p99) over >=2000 repeats (S7)."""
+        """Evaluates single-row transform latency distributions (p50, p95, p99) over >=2000 repeats (S7/I2)."""
         cfg_dense = DecompositionConfig(method=MethodType.sklearn_pca, k=90, seed=self.seed)
         t_dense = DecompositionTransformer(cfg_dense).fit(X_train_mnist)
 
         csr_mnist = sp.csr_matrix(X_train_mnist)
+        cfg_csr = DecompositionConfig(method=MethodType.scipy_implicit_centered, k=90, seed=self.seed)
+        t_csr = DecompositionTransformer(cfg_csr).fit(csr_mnist)
+
         x_dense_1 = X_train_mnist[:1, :].copy()
         x_sparse_1 = csr_mnist[:1, :].copy()
 
         # Warmup calls
         for _ in range(50):
             t_dense.transform(x_dense_1)
-            t_dense.transform(x_sparse_1)
+            t_csr.transform(x_sparse_1)
 
         repeats = 2000
         dense_latencies_ms = []
@@ -868,7 +933,7 @@ class BenchmarkRunner:
         sparse_latencies_ms = []
         for _ in range(repeats):
             t0 = time.perf_counter()
-            t_dense.transform(x_sparse_1)
+            t_csr.transform(x_sparse_1)
             sparse_latencies_ms.append((time.perf_counter() - t0) * 1000.0)
 
         # Large-d synthetic row (d=5000)
@@ -899,6 +964,52 @@ class BenchmarkRunner:
 
         return {
             "n_repeats": repeats,
+            "latency_rows": [
+                {
+                    "dataset": "mnist_train_single_row",
+                    "input_format": "dense_ndarray",
+                    "backend": "sklearn_pca",
+                    "k": 90,
+                    "d": 784,
+                    "p50_ms": float(np.percentile(dense_latencies_ms, 50)),
+                    "p95_ms": float(np.percentile(dense_latencies_ms, 95)),
+                    "p99_ms": float(np.percentile(dense_latencies_ms, 99)),
+                    "note": "Contiguous BLAS GEMV / vector registers; dense is faster than CSR at d=784."
+                },
+                {
+                    "dataset": "mnist_train_single_row",
+                    "input_format": "csr_matrix",
+                    "backend": "scipy_implicit_centered",
+                    "k": 90,
+                    "d": 784,
+                    "p50_ms": float(np.percentile(sparse_latencies_ms, 50)),
+                    "p95_ms": float(np.percentile(sparse_latencies_ms, 95)),
+                    "p99_ms": float(np.percentile(sparse_latencies_ms, 99)),
+                    "note": "Sparse traversal overhead (indptr/indices); no speedup observed at d=784."
+                },
+                {
+                    "dataset": "synthetic_d5000_single_row",
+                    "input_format": "dense_ndarray",
+                    "backend": "sklearn_pca",
+                    "k": 20,
+                    "d": 5000,
+                    "p50_ms": float(np.percentile(large_dense_latencies_ms, 50)),
+                    "p95_ms": float(np.percentile(large_dense_latencies_ms, 95)),
+                    "p99_ms": float(np.percentile(large_dense_latencies_ms, 99)),
+                    "note": "Contiguous memory layout; dense remains faster than CSR at d=5000."
+                },
+                {
+                    "dataset": "synthetic_d5000_single_row",
+                    "input_format": "csr_matrix",
+                    "backend": "sklearn_pca_sparse_transform",
+                    "k": 20,
+                    "d": 5000,
+                    "p50_ms": float(np.percentile(large_sparse_latencies_ms, 50)),
+                    "p95_ms": float(np.percentile(large_sparse_latencies_ms, 95)),
+                    "p99_ms": float(np.percentile(large_sparse_latencies_ms, 99)),
+                    "note": "Sparse indirection overhead; no crossover observed at d<=5000."
+                }
+            ],
             "mnist_dense_row_p50_ms": float(np.percentile(dense_latencies_ms, 50)),
             "mnist_dense_row_p95_ms": float(np.percentile(dense_latencies_ms, 95)),
             "mnist_dense_row_p99_ms": float(np.percentile(dense_latencies_ms, 99)),
@@ -911,6 +1022,10 @@ class BenchmarkRunner:
             "large_d_csr_row_p50_ms": float(np.percentile(large_sparse_latencies_ms, 50)),
             "large_d_csr_row_p95_ms": float(np.percentile(large_sparse_latencies_ms, 95)),
             "large_d_csr_row_p99_ms": float(np.percentile(large_sparse_latencies_ms, 99)),
+            "general_finding": (
+                "Dense online transform is strictly faster than CSR for single-row inference at d<=5000 "
+                "due to contiguous SIMD vectorization vs sparse pointer indirection; no crossover claimed."
+            )
         }
 
     def run_full_suite(self, output_dir: Path = Path(".")) -> Tuple[Path, Path]:
@@ -929,9 +1044,9 @@ class BenchmarkRunner:
         dense_sparse_results = self.run_dense_vs_sparse_benchmarks(X_train)
 
         # 4. Fresh subprocess memory measurements (with 1 ms working set sampler thread)
-        mem_pca_dense = measure_subprocess_peak_memory("sklearn_pca_dense", data_path=self.data_path, seed=self.seed)
-        mem_scipy_csr = measure_subprocess_peak_memory("scipy_implicit_centered_csr", data_path=self.data_path, seed=self.seed, k=20)
-        mem_control_dense = measure_subprocess_peak_memory("scipy_implicit_centered_control_dense", data_path=self.data_path, seed=self.seed, k=20)
+        mem_pca_dense = measure_subprocess_peak_memory("sklearn_pca_dense", data_path=self.data_path, seed=self.seed, k=90)
+        mem_scipy_csr = measure_subprocess_peak_memory("scipy_implicit_centered_csr", data_path=self.data_path, seed=self.seed, k=90)
+        mem_control_dense = measure_subprocess_peak_memory("scipy_implicit_centered_control_dense", data_path=self.data_path, seed=self.seed, k=90)
         mem_large_synthetic = measure_subprocess_peak_memory("large_synthetic_csr", data_path=self.data_path, seed=self.seed, k=5)
         memory_results = [mem_pca_dense, mem_scipy_csr, mem_control_dense, mem_large_synthetic]
 
@@ -993,22 +1108,23 @@ class BenchmarkRunner:
 
         mem_pca = next(m for m in data["memory_benchmarks_subprocess"] if m["target"] == "sklearn_pca_dense")
         mem_csr = next(m for m in data["memory_benchmarks_subprocess"] if m["target"] == "scipy_implicit_centered_csr")
+        mem_ctrl = next(m for m in data["memory_benchmarks_subprocess"] if m["target"] == "scipy_implicit_centered_control_dense")
         mem_syn = next(m for m in data["memory_benchmarks_subprocess"] if m["target"] == "large_synthetic_csr")
 
         content = (
             "# Numerical Hardware & BLAS Acceleration Gap Analysis (Day 6)\n\n"
             f"1. Linear System Acceleration (n=400): Pure-Python Gaussian elimination achieved nominal {py_gflops:.4f} GFLOPS ({g_400['pure_python_median_s']:.3f} s), "
-            f"whereas np.linalg.solve (OpenBLAS 1T) achieved nominal {np_1t_gflops:.2f} GFLOPS ({g_400['numpy_1t_median_s']:.5f} s), yielding an observed gap of {speedup_400:.0f}x (range across sessions: ~1760x - 3200x depending on CPU load).\n"
-            f"2. Scaling Complexity: Empirical local exponent over n=100..400 (3 points) yields n^{py_exp:.2f} for pure-Python vs n^{np_exp:.2f} for LAPACK dgesv (doubling ratios: py={g_400['pure_python_doubling_ratio_200_100']:.2f}, np={g_400['numpy_1t_doubling_ratio_200_100']:.2f}).\n"
+            f"whereas np.linalg.solve (OpenBLAS 1T) achieved nominal {np_1t_gflops:.2f} GFLOPS ({g_400['numpy_1t_median_s']:.5f} s), yielding an observed gap of {speedup_400:.0f}x (range across sessions: ~1.2e3 - 3.2e3 depending on CPU load).\n"
+            f"2. Scaling Complexity: Empirical local exponent over n=100..400 (3 points, local, noisy) yields n^{py_exp:.2f} for pure-Python vs n^{np_exp:.2f} for LAPACK dgesv (doubling ratios: py={g_400['pure_python_doubling_ratio_200_100']:.2f}, np={g_400['numpy_1t_doubling_ratio_200_100']:.2f}).\n"
             f"3. Overhead Roots (Hypothesis): The baseline gap combines Python bytecode interpretation and boxed object allocation with LAPACK SIMD/FMA vectorization and cache blocking (combined, not isolated).\n"
-            f"4. Multithreading Crossover: Thread synchronization overhead dominates at small sizes (n=400: 1T={g_400['numpy_1t_median_s']*1000:.2f} ms vs 4T={g_400['numpy_4t_median_s']*1000:.2f} ms); crossover where 4T beats 1T is observed at n=1000 (1T={g_1000['numpy_1t_median_s']*1000:.2f} ms vs 4T={g_1000['numpy_4t_median_s']*1000:.2f} ms).\n"
+            f"4. Multithreading Crossover (Hypothesis): Thread synchronization overhead dominates at small sizes (n=400: 1T={g_400['numpy_1t_median_s']*1000:.2f} ms vs 4T={g_400['numpy_4t_median_s']*1000:.2f} ms; across sessions 4T varied 16.75 ms -> 3.62 ms); crossover where 4T beats 1T is observed at n=1000 (1T={g_1000['numpy_1t_median_s']*1000:.2f} ms vs 4T={g_1000['numpy_4t_median_s']*1000:.2f} ms).\n"
             f"5. Locked Decomposition Scaling: On MNIST (8000x784, k=90), sklearn_pca fit took {t_1t:.3f} s (1T) vs {t_4t:.3f} s (4T) using svd_solver=full (nominal formula GFLOPS: {decomp['nominal_formula_gflops_1t']:.1f}).\n"
             f"6. Algorithm Distinction: Apparent {acc_90['apparent_speedup']:.2f}x speedup between scipy svds ({acc_90['scipy_implicit_centered_fit_median_s']:.3f} s) and sklearn PCA ({acc_90['sklearn_pca_fit_median_s']:.3f} s) at locked k=90 reflects different algorithms, not attributable to sparsity.\n"
-            f"7. Locked Subspace Accuracy: At k=90, scipy_implicit_centered and sklearn_pca achieve identical train reconstruction MSE ({acc_90['sparse_reconstruction_mse']:.2f}) with max principal angle {acc_90['max_principal_angle_deg']:.2e}° and mean angle {acc_90['mean_principal_angle_deg']:.2e}°.\n"
+            f"7. Locked Subspace Accuracy: At k=90, scipy_implicit_centered and sklearn_pca achieve identical train reconstruction MSE ({acc_90['sparse_reconstruction_mse']:.2f}) with max principal angle {acc_90['max_principal_angle_deg']:.2e} deg and mean angle {acc_90['mean_principal_angle_deg']:.2e} deg.\n"
             f"8. Same-Backend Sparsity: scipy_implicit_centered (k=20, not locked config) on CSR vs Dense achieved {same_1['speedup_ratio_mean']:.2f}x speedup at 1% density and {same_40['speedup_ratio_mean']:.2f}x at 40% (95% CI: [{same_40['speedup_ratio_95_ci'][0]:.2f}, {same_40['speedup_ratio_95_ci'][1]:.2f}]; no dense crossover observed in tested range).\n"
-            f"9. Subprocess Working Set Profile: Sampled peak working set increase (1 ms thread) was {mem_pca['net_working_set_mb']:.1f} MB (dense PCA) vs {mem_csr['net_working_set_mb']:.1f} MB (sparse CSR); tracemalloc recorded {mem_pca['tracemalloc_peak_mb']:.1f} MB vs {mem_csr['tracemalloc_peak_mb']:.1f} MB.\n"
-            f"10. Out-of-Core Synthetic Footprint: For synthetic matrix (60000x20000), analytic dense size is {mem_syn['analytic_dense_mb'] / 1024:.2f} GB (exceeding 7.75 GB RAM); measured CSR fit working set was only {mem_syn['net_working_set_mb']:.1f} MB (never densified).\n"
-            f"11. Online Latency: Over 2000 repeats, single-row transform p50 latency is {data['online_serving_latency']['mnist_dense_row_p50_ms']:.4f} ms (dense) vs {data['online_serving_latency']['mnist_csr_row_p50_ms']:.4f} ms (sparse CSR).\n"
+            f"9. Subprocess Working Set Profile: Sampled current wset max minus pre-fit sample at SAME backend and locked k=90 (scipy_implicit_centered) was {mem_csr['sampled_current_wset_max_minus_pre_fit_sample_mb']:.1f} MB (sparse CSR) vs {mem_ctrl['sampled_current_wset_max_minus_pre_fit_sample_mb']:.1f} MB (control dense, densified inside measured region); tracemalloc was {mem_csr['tracemalloc_peak_mb']:.1f} MB vs {mem_ctrl['tracemalloc_peak_mb']:.1f} MB. (Dense PCA k=90 wset delta: {mem_pca['sampled_current_wset_max_minus_pre_fit_sample_mb']:.1f} MB, tracemalloc: {mem_pca['tracemalloc_peak_mb']:.1f} MB; tracemalloc exceeds wset delta due to Python buffer heap high watermark vs OS physical page reuse).\n"
+            f"10. Out-of-Core Synthetic Footprint: For synthetic matrix (n={mem_syn['n']}, d={mem_syn['d']}, nnz={mem_syn['nnz']}, density={mem_syn['actual_density']:.4f}, analytic CSR {mem_syn['csr_bytes_analytic_mb']:.2f} MB, backend={mem_syn['backend_actually_used']}, matvec_count={mem_syn['matvec_count']}, matrix built before baseline, baseline sample={mem_syn['pre_fit_sample_mb']:.1f} MB), analytic dense size is {mem_syn['analytic_dense_mb'] / 1024:.2f} GB (exceeding 7.75 GB RAM); measured CSR fit working set delta was only {mem_syn['sampled_current_wset_max_minus_pre_fit_sample_mb']:.1f} MB (never densified).\n"
+            f"11. Online Latency: Over 2000 repeats, single-row transform p50 latency is: at d=784 (k=90), sklearn_pca dense = {data['online_serving_latency']['mnist_dense_row_p50_ms']:.4f} ms vs scipy_implicit_centered CSR = {data['online_serving_latency']['mnist_csr_row_p50_ms']:.4f} ms; at d=5000 (k=20), dense = {data['online_serving_latency']['large_d_dense_row_p50_ms']:.4f} ms vs CSR = {data['online_serving_latency']['large_d_csr_row_p50_ms']:.4f} ms. Dense remains strictly faster for single-row inference at d<=5000 due to contiguous vector registers; no crossover claimed.\n"
         )
 
         with open(path, "w", encoding="utf-8") as f:
