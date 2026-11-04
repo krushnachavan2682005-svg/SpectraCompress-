@@ -29,6 +29,7 @@ from decomposition import DecompositionTransformer, DecompositionConfig, MethodT
 from eval.metrics import mean_squared_reconstruction_error
 from error_analysis import slice_reconstruction_error, worst_n_rows
 from serialization import save_transformer, load_transformer
+from baseline import TopKVarianceBaseline
 
 # Configure structured logging
 logging.basicConfig(
@@ -249,6 +250,7 @@ class SpectraCompressPipeline:
         self,
         test_path_override: Optional[str] = None,
         error_persist_path: str = "reports/test_per_row_errors.npy",
+        metadata_persist_path: str = "reports/test_eval_metadata.json",
     ) -> Dict[str, Any]:
         """
         Executes the guarded test evaluation step.
@@ -258,7 +260,9 @@ class SpectraCompressPipeline:
         - Otherwise, checks audit counter, reads test file once, validates schema, computes per-row errors,
           and persists them to error_persist_path IMMEDIATELY before computing summary metrics.
         """
+        import io
         persist_p = Path(error_persist_path)
+        meta_p = Path(metadata_persist_path)
         test_path = test_path_override or self.config["test_path"]
 
         # Check if pre-computed errors already exist on disk (crash-resilience)
@@ -273,31 +277,78 @@ class SpectraCompressPipeline:
             test_std = float(np.std(e_per_row, ddof=1))
             test_se = float(test_std / np.sqrt(n_test))
 
+            total_var = None
+            file_sha256 = None
+            baseline_test_mse = None
+            if meta_p.exists():
+                try:
+                    with open(meta_p, "r", encoding="utf-8") as f:
+                        meta = json.load(f)
+                    total_var = meta.get("total_variance")
+                    file_sha256 = meta.get("file_sha256")
+                    baseline_test_mse = meta.get("baseline_test_mse")
+                except Exception as ex:
+                    logger.warning(f"Could not read metadata from {meta_p}: {ex}")
+
+            var_explained = float(1.0 - (test_mse / total_var)) if total_var and total_var > 0 else 0.0
             val_mse = self.val_metrics.get("val_mse", 335548.67510134965)
             rel_gap = float(abs(test_mse - val_mse) / val_mse)
+            tau = self.config.get("tau", 0.05)
+            verdict = "PASS" if rel_gap <= tau else "CONDITIONAL PASS"
 
             self.test_metrics = {
                 "n_test": n_test,
+                "test_file_sha256": file_sha256,
                 "test_mse": test_mse,
                 "test_std": test_std,
                 "test_se": test_se,
+                "total_variance": total_var,
+                "test_variance_explained": var_explained,
+                "baseline_test_mse": baseline_test_mse,
+                "val_mse": val_mse,
                 "val_vs_test_relative_gap": rel_gap,
+                "tau": tau,
+                "evaluation_verdict": verdict,
                 "audit_access_count": TestSplitAuditHook.get_count(),
                 "recovered_from_cache": True,
             }
             return self.test_metrics
 
-        # Single-touch read under audit hook
-        TestSplitAuditHook.record_access(test_path)
+        # Single-touch read under audit hook (guarded_open intercepts open(test_path))
         logger.info(f"Evaluating quarantined test split from '{test_path}'...")
         if not os.path.exists(test_path):
             raise FileNotFoundError(f"Test dataset not found at: {test_path}")
 
-        df_test = pd.read_csv(test_path)
+        # 1. Read mnist_test.csv ONCE as raw bytes (triggers TestSplitAuditHook via guarded_open)
+        with open(test_path, "rb") as f:
+            raw_bytes = f.read()
+
+        # 2. Compute SHA-256 of file bytes
+        file_sha256 = hashlib.sha256(raw_bytes).hexdigest()
+        logger.info(f"Quarantined test file SHA-256: {file_sha256}")
+
+        # 3. Parse CSV from memory
+        df_test = pd.read_csv(io.BytesIO(raw_bytes))
         labels_test = df_test["label"].values.astype(str)
         X_test = df_test.drop(columns=["label"]).values.astype(np.float64)
 
-        # Schema validation on test
+        # Compute reconstruction and per-row errors
+        X_test_hat = self.transformer.reconstruct(X_test)
+        e_per_row = np.sum((X_test - X_test_hat) ** 2, axis=1)
+
+        # 4. IMMEDIATELY persist per-row errors before any other computation
+        persist_p.parent.mkdir(parents=True, exist_ok=True)
+        np.save(persist_p, e_per_row)
+        logger.info(f"Persisted {len(e_per_row)} per-row squared errors to '{persist_p}' immediately.")
+
+        # 5. Validate schema (785 cols, 10000 rows, label dropped, pixels 0-255)
+        if df_test.shape[1] != 785:
+            raise InputValidation(message=f"Expected 785 columns in test CSV, got {df_test.shape[1]}")
+        if df_test.shape[0] != 10000 and test_path_override is None:
+            raise InputValidation(message=f"Expected 10000 rows in test CSV, got {df_test.shape[0]}")
+        if "label" not in df_test.columns:
+            raise InputValidation(message="Missing 'label' column in test dataset")
+
         contract = DataContract(
             expected_shape=(X_test.shape[0], 784),
             dtype=X_test.dtype,
@@ -305,16 +356,7 @@ class SpectraCompressPipeline:
         )
         SchemaValidator.validate_schema(X_test, contract)
 
-        # Compute reconstruction and errors
-        X_test_hat = self.transformer.reconstruct(X_test)
-        e_per_row = np.sum((X_test - X_test_hat) ** 2, axis=1)
-
-        # IMMEDIATELY persist per-row errors to disk before any other computation
-        persist_p.parent.mkdir(parents=True, exist_ok=True)
-        np.save(persist_p, e_per_row)
-        logger.info(f"Persisted {len(e_per_row)} per-row squared errors to '{persist_p}' immediately.")
-
-        # Derive all remaining metrics strictly from e_per_row and X_test
+        # 6. Metrics
         test_mse = float(np.mean(e_per_row))
         test_std = float(np.std(e_per_row, ddof=1))
         test_se = float(test_std / np.sqrt(len(e_per_row)))
@@ -327,18 +369,87 @@ class SpectraCompressPipeline:
             raise RuntimeError("Validation evaluation must precede test evaluation.")
 
         rel_gap = float(abs(test_mse - val_mse) / val_mse)
+        tau = self.config.get("tau", 0.05)
+        verdict = "PASS" if rel_gap <= tau else "CONDITIONAL PASS"
+
+        # Baseline (TopKVarianceBaseline) test MSE computed from the SAME single read
+        mu_train = np.mean(self.X_train, axis=0)
+        Xc_train = self.X_train - mu_train
+        b_state = TopKVarianceBaseline.fit_baseline(Xc_train, k=self.config["k"])
+        top_k = b_state.top_k_indices
+
+        Xc_test = X_test - mu_train
+        Xc_baseline_hat = np.zeros_like(Xc_test)
+        Xc_baseline_hat[:, top_k] = Xc_test[:, top_k]
+        X_baseline_hat = Xc_baseline_hat + mu_train
+        baseline_e_per_row = np.sum((X_test - X_baseline_hat) ** 2, axis=1)
+        baseline_test_mse = float(np.mean(baseline_e_per_row))
+
+        # Save metadata for crash recovery
+        meta_p.parent.mkdir(parents=True, exist_ok=True)
+        with open(meta_p, "w", encoding="utf-8") as f:
+            json.dump({
+                "total_variance": total_var,
+                "file_sha256": file_sha256,
+                "baseline_test_mse": baseline_test_mse,
+            }, f, indent=2)
 
         self.test_metrics = {
             "n_test": len(X_test),
+            "test_file_sha256": file_sha256,
             "test_mse": test_mse,
             "test_std": test_std,
             "test_se": test_se,
+            "total_variance": total_var,
             "test_variance_explained": var_explained,
+            "baseline_test_mse": baseline_test_mse,
+            "val_mse": val_mse,
             "val_vs_test_relative_gap": rel_gap,
+            "tau": tau,
+            "evaluation_verdict": verdict,
             "audit_access_count": TestSplitAuditHook.get_count(),
             "recovered_from_cache": False,
         }
-        logger.info(f"Test evaluation complete: MSE={test_mse:.4f}, RelGap={rel_gap:.4f}")
+        logger.info(
+            f"Test evaluation complete: MSE={test_mse:.4f}, SE={test_se:.4f}, "
+            f"VarExpl={var_explained:.4f}, BaselineMSE={baseline_test_mse:.4f}, "
+            f"RelGap={rel_gap:.4f}, Verdict={verdict}"
+        )
+
+        # Write reports only for real test split run
+        if test_path_override is None:
+            final_eval_path = Path("reports/final_evaluation.json")
+            final_eval_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(final_eval_path, "w", encoding="utf-8") as f:
+                json.dump(self.test_metrics, f, indent=2)
+            logger.info(f"Recorded test evaluation to {final_eval_path}")
+
+            slice_df = slice_reconstruction_error(
+                X_test,
+                X_test_hat,
+                labels_test,
+                mu=mu_train,
+                min_size=self.config.get("slice_min_size", 30),
+                n_boot=self.config.get("n_bootstrap", 1000),
+                seed=self.config.get("bootstrap_seed", 42),
+            )
+            worst_df = worst_n_rows(
+                X_test,
+                X_test_hat,
+                labels_test,
+                n=10,
+                mu=mu_train,
+            )
+            error_analysis_report = {
+                "test_file_sha256": file_sha256,
+                "slice_errors": slice_df.to_dict(orient="records"),
+                "worst_10_rows": worst_df.to_dict(orient="records"),
+            }
+            final_err_path = Path("reports/final_error_analysis.json")
+            with open(final_err_path, "w", encoding="utf-8") as f:
+                json.dump(error_analysis_report, f, indent=2)
+            logger.info(f"Recorded slice errors and worst 10 rows to {final_err_path}")
+
         return self.test_metrics
 
     def run_error_analysis(self) -> Dict[str, Any]:

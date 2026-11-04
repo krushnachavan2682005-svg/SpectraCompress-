@@ -495,3 +495,135 @@ def test_sparse_equals_dense_reconstruction_error_200_mnist():
         f"Sparse vs dense reconstruction error mismatch: max_rel_diff={max_rel_diff}"
     )
 
+
+def test_crash_recovery_resumes_without_second_read(tmp_path):
+    """
+    F2: Crash recovery test.
+    Simulate exception immediately after the .npy save during test evaluation.
+    Rerun evaluate_test_guarded, show metrics recovered from file and audit_access_count
+    unchanged (no second read).
+    """
+    TestSplitAuditHook.reset()
+    dummy_test_path = tmp_path / "dummy_crash_mnist_test.csv"
+    persist_npy_path = tmp_path / "dummy_crash_errors.npy"
+    persist_meta_path = tmp_path / "dummy_crash_meta.json"
+
+    # Create dummy dataset: 100 rows, 784 pixel columns + 1 label column
+    rng = np.random.RandomState(42)
+    dummy_pixels = rng.randint(0, 256, size=(100, 784)).astype(np.float64)
+    dummy_df = pd.DataFrame(dummy_pixels, columns=[f"pixel{i}" for i in range(784)])
+    dummy_df.insert(0, "label", rng.randint(0, 10, size=100))
+    dummy_df.to_csv(dummy_test_path, index=False)
+    TestSplitAuditHook.reset()
+    assert TestSplitAuditHook.get_count() == 0
+
+    with open("final_config.json", "r", encoding="utf-8") as f:
+        cfg = json.load(f)
+
+    pipe = SpectraCompressPipeline(cfg)
+    X, labels = pipe.load_and_validate()
+    pipe.split_data(X, labels)
+    pipe.fit()
+    pipe.evaluate_validation()
+
+    # Monkeypatch SchemaValidator.validate_schema to raise right after .npy save
+    orig_validate = SchemaValidator.validate_schema
+    def crash_after_save(data, contract):
+        if data.shape[0] == 100:
+            raise RuntimeError("SIMULATED PIPELINE CRASH IMMEDIATELY AFTER NPY SAVE")
+        return orig_validate(data, contract)
+
+    SchemaValidator.validate_schema = crash_after_save
+
+    # Run guarded eval with simulated crash
+    with pytest.raises(RuntimeError, match="SIMULATED PIPELINE CRASH IMMEDIATELY AFTER NPY SAVE"):
+        pipe.evaluate_test_guarded(
+            test_path_override=str(dummy_test_path),
+            error_persist_path=str(persist_npy_path),
+            metadata_persist_path=str(persist_meta_path),
+        )
+
+    # Restore original validate_schema
+    SchemaValidator.validate_schema = orig_validate
+
+    # Verify that .npy was indeed persisted before the crash
+    assert persist_npy_path.exists(), "Per-row error array must be persisted before crash!"
+    initial_access_count = TestSplitAuditHook.get_count()
+    assert initial_access_count == 1, f"Expected 1 access recorded, got {initial_access_count}"
+
+    # Now rerun evaluate_test_guarded on the same paths
+    recovered_metrics = pipe.evaluate_test_guarded(
+        test_path_override=str(dummy_test_path),
+        error_persist_path=str(persist_npy_path),
+        metadata_persist_path=str(persist_meta_path),
+    )
+
+    # Assert recovery without re-reading
+    assert recovered_metrics["recovered_from_cache"] is True
+    assert TestSplitAuditHook.get_count() == initial_access_count == 1, (
+        f"Audit counter changed! Expected {initial_access_count}, got {TestSplitAuditHook.get_count()}"
+    )
+    assert recovered_metrics["n_test"] == 100
+    assert np.isfinite(recovered_metrics["test_mse"])
+    assert np.isfinite(recovered_metrics["test_std"])
+    assert np.isfinite(recovered_metrics["test_se"])
+
+    TestSplitAuditHook.reset()
+
+
+def test_metrics_derived_from_errors_match_returned_metrics(tmp_path):
+    """
+    F3: Verifies that metrics derived directly from test_per_row_errors.npy
+    match the metrics returned by the first run (mean, std, SE, VarExpl)
+    within exact float precision.
+    """
+    TestSplitAuditHook.reset()
+    dummy_test_path = tmp_path / "dummy_metrics_mnist_test.csv"
+    persist_npy_path = tmp_path / "dummy_test_per_row_errors.npy"
+    persist_meta_path = tmp_path / "dummy_test_meta.json"
+
+    # Create dummy dataset: 100 rows, 784 pixel columns + 1 label column
+    rng = np.random.RandomState(123)
+    dummy_pixels = rng.randint(0, 256, size=(100, 784)).astype(np.float64)
+    dummy_df = pd.DataFrame(dummy_pixels, columns=[f"pixel{i}" for i in range(784)])
+    dummy_df.insert(0, "label", rng.randint(0, 10, size=100))
+    dummy_df.to_csv(dummy_test_path, index=False)
+    TestSplitAuditHook.reset()
+    assert TestSplitAuditHook.get_count() == 0
+
+    with open("final_config.json", "r", encoding="utf-8") as f:
+        cfg = json.load(f)
+
+    pipe = SpectraCompressPipeline(cfg)
+    X, labels = pipe.load_and_validate()
+    pipe.split_data(X, labels)
+    pipe.fit()
+    pipe.evaluate_validation()
+
+    first_run_metrics = pipe.evaluate_test_guarded(
+        test_path_override=str(dummy_test_path),
+        error_persist_path=str(persist_npy_path),
+        metadata_persist_path=str(persist_meta_path),
+    )
+
+    assert persist_npy_path.exists()
+    assert first_run_metrics["recovered_from_cache"] is False
+
+    # Derive metrics directly from the persisted error array
+    e_loaded = np.load(persist_npy_path)
+    n = len(e_loaded)
+    derived_mean = float(np.mean(e_loaded))
+    derived_std = float(np.std(e_loaded, ddof=1))
+    derived_se = float(derived_std / np.sqrt(n))
+
+    total_var = first_run_metrics["total_variance"]
+    derived_var_expl = float(1.0 - (derived_mean / total_var)) if total_var > 0 else 0.0
+
+    # Compare derived metrics vs returned metrics
+    assert np.isclose(derived_mean, first_run_metrics["test_mse"], rtol=1e-12, atol=1e-12)
+    assert np.isclose(derived_std, first_run_metrics["test_std"], rtol=1e-12, atol=1e-12)
+    assert np.isclose(derived_se, first_run_metrics["test_se"], rtol=1e-12, atol=1e-12)
+    assert np.isclose(derived_var_expl, first_run_metrics["test_variance_explained"], rtol=1e-12, atol=1e-12)
+
+    TestSplitAuditHook.reset()
+
