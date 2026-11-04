@@ -22,7 +22,7 @@
     "is_sparse": false,
     "n_train": 8000,
     "split_seed": 42,
-    "timestamp_utc": "2026-11-04T06:21:31.261761+00:00"
+    "timestamp_utc": "2026-11-04T08:38:21.667591+00:00"
   },
   "fit_warnings_": [
     "Detected 118 constant features with variance <= 1e-12."
@@ -34,7 +34,7 @@
     "scipy": "1.17.1",
     "sklearn": "1.9.0"
   },
-  "manifest_sha256": "5adf7d8f523e74815551e5ba7b222a0bcdd6eb0ae7c2754b9bd5503e4fa06900",
+  "manifest_sha256": "b3afd7881e3f0ec89583b2f1f66e69c61bb6ee2fe914f491b4e34e776628d60e",
   "method": "sklearn_pca",
   "n_features_in_": 784,
   "npz_filename": "spectra_compress_model.npz",

@@ -1,0 +1,16 @@
+{
+  "n_test": 10000,
+  "test_file_sha256": "c5adfcc9ce29069f8a988a6af1dcdc009bba975d2c98a52233661f79d880292b",
+  "test_mse": 327890.7606273344,
+  "test_std": 132435.584397364,
+  "test_se": 1324.35584397364,
+  "total_variance": 3436801.0499641364,
+  "test_variance_explained": 0.9045941979589549,
+  "baseline_test_mse": 2321904.2900117286,
+  "val_mse": 335548.67510134965,
+  "val_vs_test_relative_gap": 0.022822067384716187,
+  "tau": 0.05,
+  "evaluation_verdict": "PASS",
+  "audit_access_count": 1,
+  "recovered_from_cache": false
+}
