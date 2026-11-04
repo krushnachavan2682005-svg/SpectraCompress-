@@ -1,0 +1,209 @@
+{
+  "timestamp_utc": "2026-11-04T09:10:58.797779+00:00",
+  "locked_k": 90,
+  "method": "sklearn_pca",
+  "config_hash": "0448cc7ad697ba4a602eb1472191704d347d7bc9cb4b55dfec2304d752e5ae90",
+  "dataset_shape": [
+    8000,
+    784
+  ],
+  "blas_vendor": "openblas",
+  "environment": {
+    "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26300-SP0",
+    "cpu_count_logical": 8,
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "sklearn": "1.9.0"
+  },
+  "performance_check_rows": [
+    {
+      "operation": "fit_decomposition_1t",
+      "k": 90,
+      "backend": "scikit-learn 1.9.0 / openblas (LAPACK gesdd)",
+      "threads": 1,
+      "shape": [
+        8000,
+        784
+      ],
+      "median_s": 1.4596855999989202,
+      "mean_s": 1.8294673399985186,
+      "min_s": 1.4303773999999976,
+      "max_s": 3.332780599994294,
+      "std_s": 0.7517675745747483,
+      "nominal_gflops": 20.212221042683318,
+      "day6_baseline_s": 1.4438277999979618,
+      "status": "PASS"
+    },
+    {
+      "operation": "fit_decomposition_4t",
+      "k": 90,
+      "backend": "scikit-learn 1.9.0 / openblas (LAPACK gesdd)",
+      "threads": 4,
+      "shape": [
+        8000,
+        784
+      ],
+      "median_s": 1.470528000005288,
+      "mean_s": 1.520503300000564,
+      "min_s": 1.4169576999993296,
+      "max_s": 1.7623422000033315,
+      "std_s": 0.12367649857972789,
+      "nominal_gflops": 20.063193628338873,
+      "day6_baseline_s": 1.2845277000014903,
+      "status": "PASS"
+    },
+    {
+      "operation": "fit_decomposition_8t",
+      "k": 90,
+      "backend": "scikit-learn 1.9.0 / openblas (LAPACK gesdd)",
+      "threads": 8,
+      "shape": [
+        8000,
+        784
+      ],
+      "median_s": 1.5174598000012338,
+      "mean_s": 1.5156870999999228,
+      "min_s": 1.4433706999989226,
+      "max_s": 1.5697421000004397,
+      "std_s": 0.04297934222269807,
+      "nominal_gflops": 19.44268177646354,
+      "day6_baseline_s": 1.4314348000007158,
+      "status": "PASS"
+    },
+    {
+      "operation": "transform_dataset_1t",
+      "k": 90,
+      "backend": "scikit-learn 1.9.0 / openblas (LAPACK gesdd)",
+      "threads": 1,
+      "shape": [
+        8000,
+        784
+      ],
+      "median_s": 0.08429740000428865,
+      "mean_s": 0.08422692000167445,
+      "min_s": 0.08041699999739649,
+      "max_s": 0.08770380000350997,
+      "std_s": 0.002871475630017935,
+      "nominal_gflops": null,
+      "day6_baseline_s": 0.07661870000083582,
+      "status": "PASS"
+    },
+    {
+      "operation": "transform_dataset_8t",
+      "k": 90,
+      "backend": "scikit-learn 1.9.0 / openblas (LAPACK gesdd)",
+      "threads": 8,
+      "shape": [
+        8000,
+        784
+      ],
+      "median_s": 0.06716279999818653,
+      "mean_s": 0.0678576599995722,
+      "min_s": 0.06543999999848893,
+      "max_s": 0.07007419999717968,
+      "std_s": 0.0017390576842606987,
+      "nominal_gflops": null,
+      "day6_baseline_s": 0.06739540000125999,
+      "status": "PASS"
+    },
+    {
+      "operation": "sparse_svds_fit_1t",
+      "k": 90,
+      "backend": "scipy.sparse.linalg.svds / ARPACK (openblas)",
+      "threads": 1,
+      "shape": [
+        8000,
+        784
+      ],
+      "median_s": 0.7793936999951256,
+      "mean_s": 0.7935653599968646,
+      "min_s": 0.752480099996319,
+      "max_s": 0.8853699999963283,
+      "std_s": 0.046976049078275656,
+      "nominal_gflops": null,
+      "day6_baseline_s": 0.7698070999977062,
+      "status": "PASS"
+    },
+    {
+      "operation": "online_transform_single_row_dense",
+      "k": 90,
+      "backend": "inference.py / openblas (BLAS gemm/dot)",
+      "threads": 1,
+      "batch_size": 1,
+      "median_s": 2.7800000680144876e-05,
+      "mean_s": 2.8923800084157845e-05,
+      "min_s": 2.6399997295811772e-05,
+      "max_s": 0.00015690000145696104,
+      "std_s": 6.5338958732842515e-06,
+      "p50_us": 27.800000680144876,
+      "p90_us": 29.010001890128493,
+      "p95_us": 32.29999856557697,
+      "p99_us": 61.90099840750918,
+      "day6_baseline_s": null,
+      "status": "PASS"
+    },
+    {
+      "operation": "online_transform_single_row_sparse",
+      "k": 90,
+      "backend": "inference.py / SciPy CSR (openblas spmv)",
+      "threads": 1,
+      "batch_size": 1,
+      "median_s": 9.660000068834051e-05,
+      "mean_s": 0.00010066830001960625,
+      "min_s": 9.560000034980476e-05,
+      "max_s": 0.0005064999932073988,
+      "std_s": 1.8564521291944395e-05,
+      "p50_us": 96.60000068834051,
+      "p90_us": 103.69999654358253,
+      "p95_us": 110.310003219638,
+      "p99_us": 188.21999969077294,
+      "day6_baseline_s": null,
+      "status": "PASS"
+    },
+    {
+      "operation": "predict_batch_e2e_single_row",
+      "k": 90,
+      "backend": "predict_batch e2e (openblas)",
+      "threads": 1,
+      "batch_size": 1,
+      "median_s": 0.008697299999766983,
+      "mean_s": 0.008705359998566564,
+      "min_s": 0.008198399998946115,
+      "max_s": 0.00927619999856688,
+      "std_s": 0.0003168349952361041,
+      "day6_baseline_s": null,
+      "status": "PASS"
+    },
+    {
+      "operation": "serving_batch_100_dense",
+      "k": 90,
+      "backend": "inference.py / openblas (BLAS gemm/dot)",
+      "threads": 1,
+      "batch_size": 100,
+      "median_s": 0.01027559999783989,
+      "mean_s": 0.010916960000031395,
+      "min_s": 0.010090399999171495,
+      "max_s": 0.01407939999626251,
+      "std_s": 0.0011894037997069197,
+      "nominal_gflops": null,
+      "day6_baseline_s": null,
+      "status": "PASS"
+    },
+    {
+      "operation": "serving_batch_1000_dense",
+      "k": 90,
+      "backend": "inference.py / openblas (BLAS gemm/dot)",
+      "threads": 1,
+      "batch_size": 1000,
+      "median_s": 0.0836729499969806,
+      "mean_s": 0.09906188999812002,
+      "min_s": 0.05218909999530297,
+      "max_s": 0.1750155999980052,
+      "std_s": 0.04295420497163946,
+      "nominal_gflops": null,
+      "day6_baseline_s": null,
+      "status": "PASS"
+    }
+  ]
+}
