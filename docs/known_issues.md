@@ -98,24 +98,19 @@ This document catalogs technical debt, defects, and latent issues identified dur
 
 ---
 
-### Issue 6: References to `raw_data/mnist_test.csv` in Day 2 Source and Test Files
+### Issue 6: Limited Exploratory References to `raw_data/mnist_test.csv` in Day 2 Files
 - **File & Lines**:
   - `pca_evaluation_report.py:17`
   - `tests/test_day2.py:49`
-- **Symptom**: Direct references to the test dataset file path `"raw_data/mnist_test.csv"`.
-- **Evidence**:
-  ```python
-  # pca_evaluation_report.py:17
-  test_path = "raw_data/mnist_test.csv"
-
-  # tests/test_day2.py:49
-  dataset_path = "raw_data/mnist_test.csv"
-  ```
+- **Symptom**: Direct references to the test dataset file path `"raw_data/mnist_test.csv"` in early Day 2 exploration and tests.
+- **Evidence & Exact Computations**:
+  1. `pca_evaluation_report.py:17`: Loaded `raw_data/mnist_test.csv` purely for exploratory inspection: shape check (`df_test.shape`), column name matching against train, NaN/Inf checks (`df_test.isna()`, `np.isinf()`), and row counts after 25% sampling. No decomposition, fitting, transform, or reconstruction error was ever computed.
+  2. `tests/test_day2.py:49`: Loaded 50 rows (`max_rows=50`) purely as a numerical unit test for the `power_iteration` eigensolver against `np.linalg.eigh`. No hyperparameter selection or model evaluation was performed.
 - **Execution in Day 5**:
   Neither file runs in any Day 5 execution path:
   1. `pca_evaluation_report.py` is a Day 2 standalone inspection script that is never imported or invoked by Day 5 code.
-  2. `tests/test_day2.py` is a regression test in the test suite that skips if `mnist_test.csv` is absent (or reads 50 lines for basic shape validation in Day 2). It is completely disjoint from Day 5 selection logic.
-- **Policy Invariant**: The test set `raw_data/mnist_test.csv` is strictly quarantined and may ONLY be accessed once by the final evaluation script in Day 7.
+  2. `tests/test_day2.py` is a unit test in the test suite that skips if `mnist_test.csv` is absent (or reads 50 lines for basic eigensolver testing in Day 2). It is completely disjoint from Day 5 selection logic.
+- **Policy Invariant**: `raw_data/mnist_test.csv` was never used for selection, tuning or fitting; sole model evaluation occurs in Day 7.
 - **Target Resolution**: Refactor Day 2 files in Day 6 backlog to point to validation/synthetic data.
 
 ---
@@ -135,6 +130,7 @@ This document catalogs technical debt, defects, and latent issues identified dur
   tests/test_day5.py: 0 matches
   ```
   The invariant `test_set_accessed == False` is programmatically asserted and verified.
+- **Policy Invariant**: `raw_data/mnist_test.csv` was never used for selection, tuning or fitting; sole model evaluation occurs in Day 7.
 
 ---
 

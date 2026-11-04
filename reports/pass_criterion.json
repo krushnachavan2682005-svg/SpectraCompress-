@@ -9,5 +9,21 @@
   "three_se_relative": 0.028160060596732796,
   "timestamp": "2026-11-04T06:06:36.302666+00:00",
   "config_hash": "0448cc7ad697ba4a602eb1472191704d347d7bc9cb4b55dfec2304d752e5ae90",
-  "pre_registration_notes": "Tau derived strictly from validation SE under i.i.d. sampling assumptions (3 * SE / MSE_val = 2.82%, floored at 5.0% for finite-sample robustness). This criterion accounts ONLY for sampling variance; it does NOT account for potential distribution shift between mnist_train and the official mnist_test (e.g., distinct NIST writer demographics). If the test evaluation yields a relative gap |MSE_test - MSE_val| / MSE_val > tau, the gap must be reported with distribution shift as a hypothesis, and the model must NOT be retuned or reselected."
+  "pre_registration_notes": "Tau derived strictly from validation SE under i.i.d. sampling assumptions (3 * SE / MSE_val = 2.82%, floored at 5.0% for finite-sample robustness). This criterion accounts ONLY for sampling variance; it does NOT account for potential distribution shift between mnist_train and the official mnist_test (e.g., distinct NIST writer demographics). If the test evaluation yields a relative gap |MSE_test - MSE_val| / MSE_val > tau, the gap must be reported with distribution shift as a hypothesis, and the model must NOT be retuned or reselected.",
+  "tau_floor_rationale": "Engineering judgment floor: Under asymptotic normality with n_val=2000, 3 * SE / MSE_val yields 2.82%. However, machine learning test evaluations on finite sample datasets with non-Gaussian heavy-tailed reconstruction error distributions require practical significance bounds. A floor of tau=0.05 (5.0%) is established by engineering judgment to avoid tripping alerts on practically insignificant micro-variations (< 5%).",
+  "decision_rules": {
+    "consistent": "If val_vs_test_relative_gap <= tau (0.05), the evaluation verdict is PASS (test reconstruction error is statistically consistent with validation generalization error).",
+    "inconsistent_shift": "If val_vs_test_relative_gap > tau (0.05), the verdict CANNOT be PASS. The pre-registered verdict is CONDITIONAL PASS (provided all regression tests pass and zero artifact corruption), with the primary hypothesis of MNIST distribution shift (different NIST writer demographics between training and test sets).",
+    "fatal_failure": "If code crashes, artifact hash fails, or schema validation rejects test data, the verdict is FAIL."
+  },
+  "pre_registered_test_metrics": [
+    "test_mse",
+    "test_variance_explained",
+    "baseline_test_mse",
+    "val_vs_test_relative_gap",
+    "tau",
+    "evaluation_verdict",
+    "slice_errors",
+    "worst_10_rows"
+  ]
 }

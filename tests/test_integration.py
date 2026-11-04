@@ -92,3 +92,4 @@ def test_pass_criterion_pre_registered():
     assert np.isclose(crit["val_se"], 3149.690341335804, rtol=1e-5)
     assert crit["n_val"] == 2000
     assert "distribution shift" in crit["pre_registration_notes"].lower()
+
