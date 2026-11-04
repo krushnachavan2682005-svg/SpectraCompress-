@@ -135,3 +135,18 @@ This document catalogs technical debt, defects, and latent issues identified dur
   tests/test_day5.py: 0 matches
   ```
   The invariant `test_set_accessed == False` is programmatically asserted and verified.
+
+---
+
+### Issue 8: Python Slicing Boundary Quirk in `RowSplitter.safe_split` when `validation_rows == 0`
+- **File & Lines**: `split_strategy.py:17, 23, 24`
+- **Symptom**: When `val_ratio == 0.0` or `int(val_ratio * total_rows) == 0`, `validation_rows` evaluates to `0`. In Python slicing, `-validation_rows` evaluates to `-0 == 0`. Therefore, `val_indices = indices[-validation_rows:]` evaluates to `indices[0:]` (assigning 100% of rows to validation), while `train_indices = indices[:-validation_rows]` evaluates to `indices[:0]` (assigning an empty array `[]` to train).
+- **Evidence**:
+  ```python
+  total_rows = 100
+  validation_rows = int(0.0 * 100)  # 0
+  val_indices = indices[-0:]        # slices indices[0:], returning all 100 rows!
+  train_indices = indices[:-0]      # slices indices[:0], returning empty array!
+  ```
+- **Policy Invariant**: Prior logic is frozen per contract; `split_strategy.py` remains unmodified. The boundary behavior is documented and tested in `tests/test_integration.py::test_safe_split_zero_validation_rows_quirk`.
+

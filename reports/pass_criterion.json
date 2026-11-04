@@ -1,0 +1,13 @@
+{
+  "tau": 0.05,
+  "formula": "tau = max(0.05, 3 * (val_std / sqrt(n_val)) / val_mse)",
+  "val_mse": 335548.67510134965,
+  "val_std": 140858.4342260275,
+  "val_se": 3149.690341335804,
+  "n_val": 2000,
+  "relative_se": 0.0093866868655776,
+  "three_se_relative": 0.028160060596732796,
+  "timestamp": "2026-11-04T06:06:36.302666+00:00",
+  "config_hash": "0448cc7ad697ba4a602eb1472191704d347d7bc9cb4b55dfec2304d752e5ae90",
+  "pre_registration_notes": "Tau derived strictly from validation SE under i.i.d. sampling assumptions (3 * SE / MSE_val = 2.82%, floored at 5.0% for finite-sample robustness). This criterion accounts ONLY for sampling variance; it does NOT account for potential distribution shift between mnist_train and the official mnist_test (e.g., distinct NIST writer demographics). If the test evaluation yields a relative gap |MSE_test - MSE_val| / MSE_val > tau, the gap must be reported with distribution shift as a hypothesis, and the model must NOT be retuned or reselected."
+}
