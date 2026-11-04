@@ -48,3 +48,10 @@ Run 003 incorporates robustness repairs addressing candidate failures, method ag
 - **R6a: Robust Candidate Failure Handling**: Explicit `status` ("ok" | "failed") and `failure_reason` fields. Non-finite values or caught exceptions are recorded as failed candidates with numeric fields set to null (NaN in DataFrame). Failed candidates are strictly excluded from selection, method agreement, monotonicity checks, and outlier detection. Root cause of `from_scratch_covariance` failure at $k \ge 120$ diagnosed via `scripts/diagnose_from_scratch_failure.py` (spectral gap narrowing at rank 105 causing power iteration convergence exhaustion at `linalg_core.py:37`).
 - **R6b: Method Agreement Evidence & Empirical Rationale**: Tracked `methods_compared` and relative validation difference across valid methods; validated method equivalence within $1.12 \times 10^{-7}$ for all $k \le 100$. Explicitly noted runtime rank order instability between runs at $k=100$.
 - **R6c: Known Issues & Technical Debt Register (`docs/known_issues.md`)**: Cataloged 7 audited items across Day 1–4 modules for resolution in Day 6 backlog, and corrected `library_versions` metadata in `selection_report_run_003.json` to accurately distinguish SciPy and scikit-learn versions while maintaining zero test-set access.
+
+---
+
+## Known Limitations & Interpretability Scope
+- **Component Loadings**: Loadings correspond to spatial pixel positions describing stroke patterns across digits; cosine stability across cross-validation folds is marked NOT COMPUTED; loadings must not be given a causal interpretation (they describe linear variance structure only).
+- **Linear-Only Subspace**: As a linear PCA decomposition, non-linear manifold geometry is not captured.
+- **Dataset Scale**: Evaluated at 10k sample scale; cross-machine hardware reproducibility, float32 precision, and large-d latency crossovers are designated NOT RUN.
