@@ -1,0 +1,76 @@
+{
+  "arrays_sha256": "7773426ff150e5fb5573f876e52af697a0e33e7b9c07b24485f420ce80b0b74e",
+  "centered_": true,
+  "condition_report_": {
+    "band": "acceptable",
+    "digits_lost": 0.9655694280592694,
+    "kappa": 9.237818560918035,
+    "kappa_effective": 9.237818560918035,
+    "notes": [
+      "Detected 118 constant features with variance <= 1e-12."
+    ],
+    "numerical_rank": 90,
+    "rank_tol": 9.368413937052933e-08,
+    "sigma_max": 52739.481894955185,
+    "sigma_min_nonzero": 5709.0839733611365
+  },
+  "dtype": "float64",
+  "effective_rank_": 90,
+  "feature_names": null,
+  "fit_metadata": {
+    "condition_number_at_fit": 9.237818560918035,
+    "is_sparse": false,
+    "n_train": 8000,
+    "split_seed": 42,
+    "timestamp_utc": "2026-11-04T06:21:31.261761+00:00"
+  },
+  "fit_warnings_": [
+    "Detected 118 constant features with variance <= 1e-12."
+  ],
+  "k": 90,
+  "library_versions": {
+    "numpy": "2.4.6",
+    "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+    "scipy": "1.17.1",
+    "sklearn": "1.9.0"
+  },
+  "manifest_sha256": "5adf7d8f523e74815551e5ba7b222a0bcdd6eb0ae7c2754b9bd5503e4fa06900",
+  "method": "sklearn_pca",
+  "n_features_in_": 784,
+  "npz_filename": "spectra_compress_model.npz",
+  "provisional": false,
+  "random_state": 42,
+  "requested_rank_": 90,
+  "schema_version": 1,
+  "shapes": {
+    "components_": [
+      90,
+      784
+    ],
+    "explained_variance_": [
+      90
+    ],
+    "explained_variance_ratio_": [
+      90
+    ],
+    "feature_mean_": [
+      784
+    ],
+    "singular_values_": [
+      90
+    ]
+  },
+  "solver_params": {
+    "eig_max_iter": 1000,
+    "eig_tol": 1e-10,
+    "max_dense_cov_dim": 5000,
+    "ortho_tol": 1e-05,
+    "output_dtype": "float64",
+    "pca_svd_solver": "full",
+    "psd_clip_rtol": 1e-08,
+    "tsvd_algorithm": "arpack",
+    "tsvd_n_iter": 5
+  },
+  "source_report_hash": "11b882546939181721f87cc4eabda960bb9bfe894842de0001d3bd6c4f189b95",
+  "total_variance_": 3421533.147584995
+}
