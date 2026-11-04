@@ -2,7 +2,7 @@
 
 **SpectraCompress** is a high-performance, mathematically rigorous linear dimensionality reduction and compression engine tailored for high-dimensional image spectra (MNIST 784-pixel digit representations).
 
-The system decomposes $d = 784$ dimensional vectors into a compact $k = 90$ dimensional subspace via Principal Component Analysis (PCA), achieving an **$8.7\times$ dimensional reduction** while capturing **$90.46\%$ of dataset variance** with rigorous data leakage boundaries, tamper-evident cryptographic serialization, and high-throughput zero-densification sparse inference.
+The system decomposes $d = 784$ dimensional vectors into a compact $k = 90$ dimensional subspace via Principal Component Analysis (PCA), achieving an **$8.7\times$ dimensional reduction** with **90.46% variance explained**, backed by rigorous data leakage boundaries, SHA-256 checksummed versioned serialization, and high-throughput zero-densification sparse inference.
 
 ---
 
@@ -26,17 +26,17 @@ All performance numbers are measured empirically on the host environment and rec
 - **Validation Set Reconstruction MSE**: **$335,548.68$** ($\text{SE} = 3,149.69$)
 - **Relative Generalization Gap**: **$2.28\%$** ($\le \tau = 5.00\%$ pre-registered pass criterion)
 - **Generalization Assessment**: Consistent with validation; test MSE is $2.3\%$ lower (about $2.2$ combined SE), not claimed as better.
-- **Test Variance Explained ($R^2$)**: **$90.46\%$** ($0.9046$)
+- **Test Variance Explained**: **$90.46\%$** ($R^2 = 0.9046$)
 - **Baseline Test MSE (`TopKVarianceBaseline`, $k=90$)**: **$2,321,904.29$** ($7.08\times$ higher error than SpectraCompress)
 
 ### 2.2 Latency & Throughput (OpenBLAS / Intel Host)
 - **Single-Row Serving Latency (Dense)**: **$20.0\ \mu\text{s}$** p50 ($0.020\text{ ms}$)
 - **Single-Row Serving Latency (Sparse CSR)**: **$90.0\ \mu\text{s}$** p50 ($0.090\text{ ms}$)
 - **End-to-End Batch Serving (100 rows)**: **$9.98\text{ ms}$**
-- **End-to-End Batch Serving (1,000 rows)**: **$27.24\text{ ms}$**
-- **Decomposition Fit Time ($8000 \times 784$, 1 Thread)**: **$1.449\text{ s}$** ($20.36\text{ nominal GFLOPS}$)
-- **Decomposition Fit Time ($8000 \times 784$, 4 Threads)**: **$1.264\text{ s}$** ($23.35\text{ nominal GFLOPS}$)
-- **Full Dataset Transform ($8000 \times 784$, 8 Threads)**: **$66.10\text{ ms}$** (BLAS GEMM)
+- **End-to-End Batch Serving (1,000 rows)**: **$34.81\text{ ms}$** median, $\text{std} = 2.10\text{ ms}$ ($15$ trials; variance driven by disk I/O and manifest loading)
+- **Decomposition Fit Time ($8000 \times 784$, 1 Thread)**: **$1.449\text{ s}$** - **$2.059\text{ s}$** (subject to Windows thread scheduling)
+- **Decomposition Fit Time ($8000 \times 784$, 4 Threads)**: **$1.264\text{ s}$** - **$1.938\text{ s}$** (subject to Windows thread scheduling)
+- **Full Dataset Transform ($8000 \times 784$, 8 Threads)**: **$66.10\text{ ms}$** - **$80.17\text{ ms}$** (OpenBLAS GEMM)
 
 ---
 
@@ -48,7 +48,7 @@ Run end-to-end data ingestion, validation, model fitting, evaluation, and artifa
 # Standard training, validation evaluation, and artifact persistence
 python run_pipeline.py --config final_config.json
 
-# Production audit run with holdout test evaluation (single-touch quarantined)
+# Production audit run with holdout test evaluation (one model evaluation on test split; one recorded read; Day 2 exploratory reads disclosed)
 python run_pipeline.py --config final_config.json --final-eval
 ```
 
@@ -79,7 +79,7 @@ errors = result["reconstruction_errors"]      # Shape (10,) per-row squared erro
 
 The test suite comprises **252 tests** executed via pytest:
 - **233 legacy tests (Days 1–6)** passing unmodified.
-- **19 Day 7 integration tests** covering single-touch quarantine, schema validation, crash recovery, sparse mathematical equivalence, and serving parity.
+- **19 Day 7 integration tests** covering test split access guards, schema validation, crash recovery, sparse mathematical equivalence, and serving parity.
 
 Run the test suite:
 ```bash
@@ -88,9 +88,12 @@ python -m pytest
 
 ---
 
-## 5. Known Limitations & Scope Declarations
+## 5. Known Limitations & Disclosed Scope
 
-- **Component Loadings**: Loadings correspond to spatial pixel positions describing stroke patterns across digits; cosine stability across cross-validation folds is marked **NOT COMPUTED**; loadings must not be given a causal interpretation (they describe linear variance structure only).
-- **Constant Features**: 118 edge pixels in MNIST have empirical variance $\le 10^{-12}$ and contribute zero information to the subspace.
-- **Linear-Only Subspace**: Principal components describe optimal orthogonal linear projections; non-linear manifold geometry is not modeled.
-- **Dataset Scale**: Evaluated at 10,000-sample scale; cross-machine hardware reproducibility across architectures, float32 precision, and large-$d$ latency crossovers are designated **NOT RUN**.
+1. **Component Loadings**: Loadings correspond to spatial pixel positions describing stroke patterns across digits; cosine stability across cross-validation folds is marked **NOT COMPUTED**; loadings must not be given a causal interpretation (they describe linear variance structure only).
+2. **Day 2 Exploratory Test-File Reads**: The test split had minor exploratory reads in Day 2 (shape/NaN inspection, 50-row unit test); sole model evaluation on the test split occurs in Day 7.
+3. **Constant Features**: 118 edge pixels in MNIST have empirical variance $\le 10^{-12}$ and contribute zero information to the subspace.
+4. **Linear-Only Subspace**: Principal components describe optimal orthogonal linear projections; non-linear manifold geometry is not modeled.
+5. **Cross-Machine Reproducibility**: Designated **NOT RUN**; verified exclusively on a single host machine (Windows 10, AMD64, OpenBLAS). Cross-architecture numerical bit-determinism across Linux, macOS, and ARM processors is unverified.
+6. **Precision**: Designated **NOT RUN**; all pipelines and solvers evaluated strictly under `float64` precision. Performance and truncation errors under `float32` were not run.
+7. **Scale & Regimes**: Evaluated at 10,000-sample scale; large-$d$ latency crossovers ($d \gg 784$) and massive dataset scaling ($N \ge 10^6$) are designated **NOT RUN**.

@@ -46,7 +46,7 @@ Every systemic boundary across the data lifecycle has been codified into automat
 ### 3.1 Quarantined Test Dataset Isolation (`raw_data/mnist_test.csv`)
 - **Quarantine Invariant**: The official test set consists of 10,000 holdout digits from NIST Special Database 1.
 - **Enforcement**: `TestSplitAuditHook` intercepts all standard Python, NumPy, and Pandas file loaders (`builtins.open`, `pandas.read_csv`, `numpy.loadtxt`, `numpy.genfromtxt`).
-- **Audit Verification**: During the entire development cycle of Days 1 through 6, zero fitting, tuning, or hyperparameter selection used `mnist_test.csv`. In Day 7, the test split was accessed **exactly once** in Gate 4. The raw file hash `c5adfcc9ce29069f8a988a6af1dcdc009bba975d2c98a52233661f79d880292b` and per-row error array `reports/test_per_row_errors.npy` were written immediately upon read, and all subsequent metrics were computed from disk cache.
+- **Audit Verification**: One model evaluation on the test split; one recorded read by the audited pipeline; Day 2 exploratory reads disclosed. The raw file hash `c5adfcc9ce29069f8a988a6af1dcdc009bba975d2c98a52233661f79d880292b` and per-row error array `reports/test_per_row_errors.npy` were written immediately upon read, and all subsequent metrics were computed from disk cache.
 
 ### 3.2 Centering and Transformation Independence
 - **Mathematical Invariant**:

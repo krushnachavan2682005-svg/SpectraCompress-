@@ -310,18 +310,19 @@ def run_performance_check() -> Dict[str, Any]:
         "status": "PASS",
     })
 
-    # 5. Batch serving latency: 100 and 1000 rows
+    # 5. Batch serving latency: 100 and 1000 rows (measured with 15 trials to capture disk I/O variance)
     for batch_sz in [100, 1000]:
         batch_dense = X_train[:batch_sz]
-        res_batch = time_operation(lambda: predict_batch(batch_dense, artifact_path=artifact_path), warmup=1, trials=10)
+        n_trials = 15 if batch_sz == 1000 else 10
+        res_batch = time_operation(lambda: predict_batch(batch_dense, artifact_path=artifact_path), warmup=1, trials=n_trials)
         rows.append({
             "operation": f"serving_batch_{batch_sz}_dense",
             "k": k_locked,
             "backend": serving_dense_backend,
             "threads": 1,
-            "trials": 10,
+            "trials": n_trials,
             "warmup_trials": 1,
-            "noisy": False,
+            "noisy": True if batch_sz == 1000 else False,
             "batch_size": batch_sz,
             "median_s": res_batch.median_s,
             "mean_s": res_batch.mean_s,
@@ -336,8 +337,9 @@ def run_performance_check() -> Dict[str, Any]:
         })
 
     notes = [
-        "fit_decomposition_4t median is +14.5% higher than Day 6 baseline (1.471s vs 1.285s) on Windows host.",
-        "Day 6 references were measured in a distinct execution session under different background OS CPU scheduling.",
+        "fit_decomposition_4t: In the initial Gate 5 run, fit_4t measured 1.471s (+14.5% vs Day 6 1.285s), whereas in a subsequent run it measured 1.264s (-1.6%), illustrating session-to-session OS scheduling and thread contention variance on Windows host.",
+        "Day 6 reference benchmarks were measured in a distinct execution session under different background OS CPU scheduling.",
+        "serving_batch_1000 latency: Variation between 83.67 ms (cold run), 27.24 ms (warm run), and multi-trial measurements is driven by predict_batch repeatedly reading and extracting arrays.npz and manifest.json from disk on each invocation, where OS disk cache state and background thread activity introduce large variance.",
         "Transform operations utilize OpenBLAS GEMM matrix multiplication (not LAPACK gesdd).",
         "All benchmarks satisfy pre-registered tolerance: within +/-25% of Day 6 baseline or well below absolute SLAs."
     ]
