@@ -1,16 +1,22 @@
 import json
 import hashlib
+import shutil
 import tempfile
 from pathlib import Path
+from unittest.mock import MagicMock
 import numpy as np
+import pandas as pd
 import pytest
+import scipy.sparse as sp
 
 from split_strategy import RowSplitter
 from data.data_contracts import DataContract
 from data.data_validator import SchemaValidator
 from error import InputValidation
 from run_pipeline import SpectraCompressPipeline, TestSplitAuditHook
-from serialization import load_transformer
+from serialization import load_transformer, save_transformer, ArtifactIntegrityError
+from decomposition import DecompositionTransformer, DecompositionConfig, MethodType
+from inference import predict_batch
 
 
 def compute_canonical_config_hash(cfg: dict) -> str:
@@ -33,7 +39,6 @@ def test_safe_split_zero_validation_rows_quirk():
     assert len(val_idx) == 100
     assert np.array_equal(np.sort(val_idx), np.arange(100))
 
-    # Also check small sample where int(val_ratio * total_rows) == 0
     small_data = np.arange(4)
     train_idx_small, val_idx_small = RowSplitter.safe_split(small_data, val_ratio=0.2, seed=42)
     assert len(train_idx_small) == 0
@@ -186,15 +191,24 @@ def test_validation_evaluation_determinism():
 
 def test_validation_results_match_day5_expectations():
     """
-    Gate 2: Validation results equal Day 5 Run 003 expectations within numerical precision.
-    Flags any discrepancy if present.
+    Gate 2 / D1: Validation results equal Day 5 Run 003 expectations within numerical precision.
+    Reads reference metrics directly from selection_report_run_003.json (no hardcoding).
     """
     with open("final_config.json", "r", encoding="utf-8") as f:
         cfg = json.load(f)
 
-    # Expected from Run 003
-    expected_val_mse = 335548.67510134965
-    expected_v_val = 0.9032187240037692
+    with open("selection_report_run_003.json", "r", encoding="utf-8") as f:
+        rep3 = json.load(f)
+
+    # D1 Fix: Read dynamically from selection_report_run_003.json
+    chosen_k = rep3["chosen_k"]
+    chosen_method = rep3["chosen_method"]
+    target_row = next(
+        r for r in rep3["per_method_k_rows"]
+        if r["k"] == chosen_k and r["method"] == chosen_method
+    )
+    expected_val_mse = float(target_row["val_recon_error"])
+    expected_v_val = float(target_row["V_val"])
 
     pipe = SpectraCompressPipeline(cfg)
     X, labels = pipe.load_and_validate()
@@ -232,3 +246,190 @@ def test_quarantined_test_split_untouched_in_gate2():
 
         assert summary["test_metrics"] is None
         assert TestSplitAuditHook.get_count() == 0, "Quarantined test split was accessed during default run!"
+
+
+def test_pipeline_malformed_input_fail_fast_never_fits(monkeypatch):
+    """
+    D2: Verifies pipeline-level fail-fast behavior.
+    When training input has NaN or wrong width, pipeline raises InputValidation,
+    and a spy proves DecompositionTransformer.fit was NEVER called.
+    """
+    fit_spy = MagicMock()
+    monkeypatch.setattr(DecompositionTransformer, "fit", fit_spy)
+
+    with open("final_config.json", "r", encoding="utf-8") as f:
+        base_cfg = json.load(f)
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        # 1. NaN Input CSV
+        nan_csv = Path(tmp_dir) / "nan_train.csv"
+        df_nan = pd.DataFrame(
+            np.zeros((30, 785)),
+            columns=["label"] + [f"pixel{i}" for i in range(784)]
+        )
+        df_nan.iloc[5, 10] = np.nan
+        df_nan.to_csv(nan_csv, index=False)
+
+        cfg_nan = dict(base_cfg)
+        cfg_nan["data_path"] = str(nan_csv)
+        cfg_nan["train_samples_limit"] = 30
+
+        pipe_nan = SpectraCompressPipeline(cfg_nan)
+        with pytest.raises(InputValidation):
+            pipe_nan.run(final_eval=False)
+
+        assert fit_spy.call_count == 0, "DecompositionTransformer.fit was invoked despite NaN input!"
+
+        # 2. Wrong-width Input CSV (500 features instead of 784)
+        width_csv = Path(tmp_dir) / "wrong_width_train.csv"
+        df_wrong = pd.DataFrame(
+            np.zeros((30, 501)),
+            columns=["label"] + [f"pixel{i}" for i in range(500)]
+        )
+        df_wrong.to_csv(width_csv, index=False)
+
+        cfg_width = dict(base_cfg)
+        cfg_width["data_path"] = str(width_csv)
+        cfg_width["train_samples_limit"] = 30
+
+        pipe_width = SpectraCompressPipeline(cfg_width)
+        with pytest.raises(InputValidation):
+            pipe_width.run(final_eval=False)
+
+        assert fit_spy.call_count == 0, "DecompositionTransformer.fit was invoked despite wrong-width input!"
+
+
+def test_audit_hook_failure_path_enforcement():
+    """
+    D3: Verifies TestSplitAuditHook failure path enforcement using a dummy test path.
+    Asserts:
+      - First read -> access counter == 1
+      - Second read -> hard RuntimeError ("AUDIT BREACH")
+    """
+    TestSplitAuditHook.reset()
+    assert TestSplitAuditHook.get_count() == 0
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        dummy_test_path = Path(tmp_dir) / "dummy_test.csv"
+        dummy_test_path.write_text("label,pixel0\n0,0\n")
+
+        # First read
+        count1 = TestSplitAuditHook.record_access(dummy_test_path)
+        assert count1 == 1
+        assert TestSplitAuditHook.get_count() == 1
+
+        # Second read -> hard error
+        with pytest.raises(RuntimeError) as exc_info:
+            TestSplitAuditHook.record_access(dummy_test_path)
+        assert "AUDIT BREACH" in str(exc_info.value)
+        assert "subsequent access strictly prohibited" in str(exc_info.value).lower()
+
+    TestSplitAuditHook.reset()
+
+
+def test_inference_missing_artifact_actionable_error():
+    """
+    Gate 3: Missing artifact raises an actionable FileNotFoundError that names
+    the missing path and instructs how to generate it.
+    """
+    non_existent = Path("artifacts/non_existent_model_dir")
+    with pytest.raises(FileNotFoundError) as exc_info:
+        predict_batch(np.zeros((5, 784)), artifact_path=non_existent)
+
+    err_msg = str(exc_info.value)
+    assert str(non_existent) in err_msg
+    assert "python run_pipeline.py --config final_config.json" in err_msg
+
+
+def test_inference_wrong_width_raises_value_error():
+    """
+    Gate 3: Wrong input width (e.g. 500 features instead of 784) raises ValueError.
+    """
+    wrong_input = np.zeros((5, 500), dtype=np.float64)
+    with pytest.raises(ValueError) as exc_info:
+        predict_batch(wrong_input, artifact_path="artifacts/spectra_compress_model")
+    assert "Wrong input width" in str(exc_info.value)
+
+
+def test_inference_tampered_artifact_raises_integrity_error():
+    """
+    Gate 3: Tampered artifact (modified weight in .npz) triggers ArtifactIntegrityError.
+    """
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        dest_dir = Path(tmp_dir) / "tampered_artifact"
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2("artifacts/spectra_compress_model.json", dest_dir / "spectra_compress_model.json")
+        shutil.copy2("artifacts/spectra_compress_model.npz", dest_dir / "spectra_compress_model.npz")
+
+        # Tamper with the npz file
+        npz_file = dest_dir / "spectra_compress_model.npz"
+        assert npz_file.exists()
+        with np.load(npz_file) as data:
+            arrays = dict(data)
+
+        # Mutate components slightly
+        arrays["components_"][0, 0] += 0.5
+        np.savez_compressed(npz_file, **arrays)
+
+        # Verify load_transformer / predict_batch catches tampering
+        with pytest.raises(ArtifactIntegrityError):
+            predict_batch(np.zeros((5, 784)), artifact_path=dest_dir)
+
+
+def test_inference_sparse_never_densified(monkeypatch):
+    """
+    Gate 3: Verifies that sparse CSR input is NEVER densified during inference.
+    Monkeypatches .toarray() and .todense() to assert they are never invoked.
+    """
+    def forbidden_toarray(self, *args, **kwargs):
+        raise AssertionError("Forbidden densification: .toarray() was invoked on sparse input!")
+
+    def forbidden_todense(self, *args, **kwargs):
+        raise AssertionError("Forbidden densification: .todense() was invoked on sparse input!")
+
+    monkeypatch.setattr(sp.csr_matrix, "toarray", forbidden_toarray)
+    monkeypatch.setattr(sp.csr_matrix, "todense", forbidden_todense)
+
+    # Create sparse CSR input
+    dense_sample = np.zeros((20, 784), dtype=np.float64)
+    dense_sample[0, 100] = 50.0
+    dense_sample[5, 200] = 120.0
+    csr_input = sp.csr_matrix(dense_sample)
+
+    res = predict_batch(csr_input, artifact_path="artifacts/spectra_compress_model")
+    assert res["embedding"].shape == (20, 90)
+    assert res["reconstruction_error"].shape == (20,)
+    assert not sp.issparse(res["embedding"])  # Embeddings are dense (20, 90)
+    assert np.all(res["reconstruction_error"] >= 0.0)
+
+
+def test_inference_output_equals_pipeline_transform():
+    """
+    Gate 3: Output of inference.py equals pipeline transform and reconstruction exactly
+    (zero train/serve skew).
+    """
+    with open("final_config.json", "r", encoding="utf-8") as f:
+        cfg = json.load(f)
+
+    pipe = SpectraCompressPipeline(cfg)
+    X, labels = pipe.load_and_validate()
+    pipe.split_data(X, labels)
+    pipe.fit()
+
+    # Evaluate on first 30 validation samples
+    X_val_sample = pipe.X_val[:30]
+
+    # Pipeline transform & reconstruction
+    pipeline_emb = pipe.transformer.transform(X_val_sample)
+    pipeline_hat = pipe.transformer.reconstruct(X_val_sample)
+    pipeline_err = np.sum((X_val_sample - pipeline_hat) ** 2, axis=1)
+
+    # Inference service
+    res_dense = predict_batch(X_val_sample, artifact_path="artifacts/spectra_compress_model")
+
+    # Assert exact numerical equality
+    np.testing.assert_allclose(res_dense["embedding"], pipeline_emb, rtol=1e-12, atol=1e-12)
+    np.testing.assert_allclose(res_dense["reconstruction_error"], pipeline_err, rtol=1e-12, atol=1e-12)
+    assert res_dense["metadata"]["method"] == "sklearn_pca"
+    assert res_dense["metadata"]["k"] == 90
+    assert res_dense["metadata"]["schema_version"] == 1
